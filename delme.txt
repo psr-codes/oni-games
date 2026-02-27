@@ -1,0 +1,13 @@
+payload: {
+    "playerAddress": "0x6aab5af269952885e12db557a7e7b3b808476ea3aeb6986ca0fb5b2251d41e17",
+    "gameId": "tetris",
+    "score": 192
+}
+response: {
+    "error": "Failed to mint NFT",
+    "details": "No valid gas coins found for the transaction."
+}
+i have a few issues with this 
+first of all there is no validation logic for cheating (i mean the whole point of creating backend was so that we can somehow keep track of time played by him vs the score to check if the score is legitimate or not
+
+secondly the request is failing either way

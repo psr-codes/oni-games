@@ -1,0 +1,11 @@
+[package]
+name = "oni_games"
+edition = "2024.beta"
+
+[dependencies]
+One = { git = "https://github.com/one-chain-labs/onechain.git", subdir = "crates/sui-framework/packages/one-framework", rev = "main" }
+
+[addresses]
+oni_games = "0x0"
+one = "0x2"
+std = "0x1"
