@@ -5,7 +5,14 @@ import { GAMES } from "@/game-store/registry";
 import dynamic from "next/dynamic";
 import { useMemo, useState, useCallback } from "react";
 import Link from "next/link";
-import { useCurrentAccount } from "@mysten/dapp-kit";
+import {
+  useCurrentAccount,
+  useSignAndExecuteTransaction,
+  useSuiClient,
+} from "@mysten/dapp-kit";
+import { Transaction } from "@mysten/sui/transactions";
+import { PACKAGE_ID, MODULE, GAME_STORE_ID } from "@/config";
+import { useGameStore } from "@/hooks/useGameStore";
 
 type MintStatus = "idle" | "minting" | "success" | "error";
 
@@ -19,6 +26,10 @@ export default function GamePage() {
   const slug = params.slug as string;
   const game = GAMES[slug];
   const account = useCurrentAccount();
+  const suiClient = useSuiClient();
+  const { mutate: signAndExecute, isPending: isTxPending } =
+    useSignAndExecuteTransaction();
+  const { gameStore } = useGameStore();
 
   const [lastScore, setLastScore] = useState<number | null>(null);
   const [mintStatus, setMintStatus] = useState<MintStatus>("idle");
@@ -47,6 +58,10 @@ export default function GamePage() {
 
   const handleScoreChange = useCallback(() => {}, []);
 
+  // ---- User-Pays Mint Flow ----
+  // 1. Backend signs the score → returns {signature, nonce}
+  // 2. Frontend builds tx calling mint_verified_score
+  // 3. User's wallet signs & pays gas
   const handleMint = async () => {
     if (lastScore === null) return;
 
@@ -60,7 +75,8 @@ export default function GamePage() {
     setMintError("");
 
     try {
-      const res = await fetch("/api/mint", {
+      // Step 1: Get server signature from backend
+      const res = await fetch("/api/sign-score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -73,14 +89,76 @@ export default function GamePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || data.details || "Mint failed");
+        throw new Error(
+          data.error || data.details || "Failed to get signature",
+        );
       }
 
-      setMintResult({
-        digest: data.digest,
-        nftId: data.nftId,
+      const { signature, nonce, gameName, imageUrl } = data;
+
+      // Convert hex signature to byte array
+      const sigBytes = Array.from(Buffer.from(signature, "hex"));
+
+      // Step 2: Fetch live mint fee + treasury from on-chain GameStore
+      const storeObj = await suiClient.getObject({
+        id: GAME_STORE_ID,
+        options: { showContent: true },
       });
-      setMintStatus("success");
+      const storeFields = (storeObj.data?.content as any)?.fields;
+      const mintFee = Number(storeFields?.mint_fee || 0);
+      const treasury = storeFields?.treasury || "";
+
+      console.log("[mint] Mint fee:", mintFee, "Treasury:", treasury);
+
+      // Step 3: Build the transaction calling mint_verified_score
+      const tx = new Transaction();
+
+      // Collect mint fee (split from gas coin → transfer to treasury)
+      if (mintFee > 0 && treasury) {
+        const [feeCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(mintFee)]);
+        tx.transferObjects([feeCoin], tx.pure.address(treasury));
+      }
+
+      tx.moveCall({
+        target: `${PACKAGE_ID}::${MODULE}::mint_verified_score`,
+        arguments: [
+          tx.object(GAME_STORE_ID),
+          tx.pure.string(slug), // game_id
+          tx.pure.string(gameName), // game_name
+          tx.pure.u64(lastScore), // score
+          tx.pure.string(imageUrl), // image_url
+          tx.pure.u64(nonce), // nonce
+          tx.pure.vector("u8", sigBytes), // signature
+        ],
+      });
+
+      // Step 3: User's wallet signs & submits
+      signAndExecute(
+        { transaction: tx },
+        {
+          onSuccess: async (result) => {
+            // Wait for confirmation
+            const txResponse = await suiClient.waitForTransaction({
+              digest: result.digest,
+              options: { showEffects: true },
+            });
+
+            // Extract NFT object ID from created objects
+            let nftId: string | null = null;
+            const created = txResponse.effects?.created;
+            if (created && created.length > 0) {
+              nftId = created[0].reference.objectId;
+            }
+
+            setMintResult({ digest: result.digest, nftId });
+            setMintStatus("success");
+          },
+          onError: (err) => {
+            setMintError(err.message || "Transaction failed");
+            setMintStatus("error");
+          },
+        },
+      );
     } catch (err: any) {
       setMintError(err.message || "Failed to mint NFT");
       setMintStatus("error");
@@ -137,9 +215,15 @@ export default function GamePage() {
                 {account?.address ? (
                   <button
                     onClick={handleMint}
-                    className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl text-sm font-medium hover:from-purple-500 hover:to-pink-500 transition-all shadow-lg shadow-purple-900/30"
+                    disabled={isTxPending}
+                    className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl text-sm font-medium hover:from-purple-500 hover:to-pink-500 transition-all shadow-lg shadow-purple-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     🏆 Mint as NFT
+                    {gameStore && gameStore.mintFee > 0 && (
+                      <span className="ml-1 text-xs opacity-75">
+                        ({(gameStore.mintFee / 1_000_000_000).toFixed(2)} OCT)
+                      </span>
+                    )}
                   </button>
                 ) : (
                   <div className="text-xs text-amber-400 bg-amber-900/20 px-3 py-1.5 rounded-lg border border-amber-500/20">
@@ -152,7 +236,7 @@ export default function GamePage() {
             {mintStatus === "minting" && (
               <div className="flex items-center gap-2 text-sm text-purple-400">
                 <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                Minting on-chain...
+                Sign in wallet to mint...
               </div>
             )}
 

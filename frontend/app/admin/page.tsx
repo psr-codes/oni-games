@@ -66,6 +66,7 @@ export default function AdminPage() {
     fnName: string,
     buildTx: (tx: Transaction) => void,
     successMsg: string,
+    onSuccessCallback?: () => void,
   ) => {
     const tx = new Transaction();
     buildTx(tx);
@@ -80,6 +81,7 @@ export default function AdminPage() {
             message: `✅ ${successMsg} (tx: ${result.digest.slice(0, 12)}...)`,
           });
           refetch();
+          if (onSuccessCallback) onSuccessCallback();
           clearStatus();
         },
         onError: (err) => {
@@ -110,6 +112,7 @@ export default function AdminPage() {
         });
       },
       `Mint fee updated to ${mintFee} OCT`,
+      () => setMintFee(""),
     );
   };
 
@@ -129,6 +132,7 @@ export default function AdminPage() {
         });
       },
       `Treasury updated to ${treasury.slice(0, 10)}...`,
+      () => setTreasury(""),
     );
   };
 
@@ -149,6 +153,7 @@ export default function AdminPage() {
         });
       },
       `Marketplace fee updated to ${bps} BPS (${(bps / 100).toFixed(2)}%)`,
+      () => setMarketFeeBps(""),
     );
   };
 
@@ -179,6 +184,7 @@ export default function AdminPage() {
         });
       },
       "Server public key updated",
+      () => setServerKey(""),
     );
   };
 
