@@ -3,55 +3,13 @@
 import Link from "next/link";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { useGameStore } from "@/hooks/useGameStore";
+import { GAMES_LIST } from "@/game-store/registry";
 
 export default function Home() {
   const account = useCurrentAccount();
   const { gameStore, isPending } = useGameStore();
 
-  const games = [
-    {
-      name: "Tetris",
-      slug: "tetris",
-      emoji: "🧱",
-      color: "from-cyan-500 to-blue-600",
-      desc: "Stack blocks, clear lines",
-    },
-    {
-      name: "Snake",
-      slug: "snake",
-      emoji: "🐍",
-      color: "from-green-500 to-emerald-600",
-      desc: "Grow your snake endlessly",
-    },
-    {
-      name: "2048",
-      slug: "2048",
-      emoji: "🔢",
-      color: "from-amber-500 to-orange-600",
-      desc: "Merge tiles to reach 2048",
-    },
-    {
-      name: "Flappy Bird",
-      slug: "flappy-bird",
-      emoji: "🐦",
-      color: "from-yellow-400 to-green-500",
-      desc: "Fly through the pipes",
-    },
-    {
-      name: "Space Invaders",
-      slug: "space-invaders",
-      emoji: "👾",
-      color: "from-purple-500 to-pink-600",
-      desc: "Defend earth from aliens",
-    },
-    {
-      name: "Breakout",
-      slug: "breakout",
-      emoji: "🏓",
-      color: "from-red-500 to-rose-600",
-      desc: "Smash all the bricks",
-    },
-  ];
+  const games = GAMES_LIST;
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
@@ -109,7 +67,9 @@ export default function Home() {
             </div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-white">{games.length}</div>
+            <div className="text-3xl font-bold text-white">
+              {GAMES_LIST.length}
+            </div>
             <div className="text-sm text-gray-500 uppercase tracking-wider mt-1">
               Games
             </div>
@@ -170,7 +130,9 @@ export default function Home() {
                   <h3 className="text-xl font-bold mb-2 group-hover:text-purple-400 transition-colors">
                     {game.name}
                   </h3>
-                  <p className="text-gray-500 text-sm mb-4">{game.desc}</p>
+                  <p className="text-gray-500 text-sm mb-4">
+                    {game.description}
+                  </p>
 
                   <div className="mt-auto pt-4 border-t border-gray-800 flex items-center justify-between">
                     <span className="text-xs text-gray-600">OneChain</span>

@@ -152,6 +152,7 @@ export default function GamePage() {
 
             setMintResult({ digest: result.digest, nftId });
             setMintStatus("success");
+            setLastScore(null); // clear score to prevent re-minting
           },
           onError: (err) => {
             setMintError(err.message || "Transaction failed");

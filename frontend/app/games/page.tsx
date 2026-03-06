@@ -7,32 +7,11 @@ export default function GamesPage() {
   // Placeholder games that aren't built yet
   const comingSoon = [
     {
-      name: "Snake",
-      slug: "snake",
-      emoji: "🐍",
-      color: "from-green-500 to-emerald-600",
-      description: "Grow your snake endlessly without hitting walls",
-    },
-    {
-      name: "2048",
-      slug: "2048",
-      emoji: "🔢",
-      color: "from-amber-500 to-orange-600",
-      description: "Merge tiles strategically to reach the legendary 2048",
-    },
-    {
       name: "Flappy Bird",
       slug: "flappy-bird",
       emoji: "🐦",
       color: "from-yellow-400 to-green-500",
       description: "Tap to fly through tight gaps between pipes",
-    },
-    {
-      name: "Space Invaders",
-      slug: "space-invaders",
-      emoji: "👾",
-      color: "from-purple-500 to-pink-600",
-      description: "Defend earth from waves of descending aliens",
     },
     {
       name: "Breakout",

@@ -20,6 +20,18 @@ const GAME_META: Record<string, { name: string; imageUrl: string }> = {
     name: "Snake",
     imageUrl: "https://em-content.zobj.net/source/apple/391/snake_1f40d.png",
   },
+  "space-invaders": {
+    name: "Space Invaders",
+    imageUrl: "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f47e.png",
+  },
+  "bubble-pop": {
+    name: "Bubble Pop",
+    imageUrl: "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1fae7.png",
+  },
+  "doodle-jump": {
+    name: "Doodle Jump",
+    imageUrl: "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f438.png",
+  },
 };
 
 export async function POST(req: NextRequest) {

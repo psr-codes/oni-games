@@ -320,7 +320,7 @@ export default function MyNFTsPage() {
                     <div className="flex items-center justify-between text-xs mb-4">
                       <span className="text-gray-600">Object ID</span>
                       <a
-                        href={`https://onescan.cc/testnet/objectDetail?objectId=${nft.id}`}
+                        href={`https://onescan.cc/testnet/objectDetails?address=${nft.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-purple-400 hover:text-purple-300 font-mono transition-colors"

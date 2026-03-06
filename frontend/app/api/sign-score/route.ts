@@ -13,7 +13,7 @@ const GAME_META: Record<string, { name: string; imageUrl: string }> = {
       "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f9f1.png",
   },
   snake: {
-    name: "Snake",
+    name: "Neon Snake",
     imageUrl:
       "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f40d.png",
   },
@@ -21,6 +21,21 @@ const GAME_META: Record<string, { name: string; imageUrl: string }> = {
     name: "2048",
     imageUrl:
       "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f522.png",
+  },
+  "space-invaders": {
+    name: "Space Invaders",
+    imageUrl:
+      "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f47e.png",
+  },
+  "bubble-pop": {
+    name: "Bubble Pop",
+    imageUrl:
+      "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1fae7.png",
+  },
+  "doodle-jump": {
+    name: "Doodle Jump",
+    imageUrl:
+      "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f438.png",
   },
 };
 
