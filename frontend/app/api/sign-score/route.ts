@@ -37,6 +37,16 @@ const GAME_META: Record<string, { name: string; imageUrl: string }> = {
     imageUrl:
       "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f438.png",
   },
+  "tower-bloxx": {
+    name: "Tower Bloxx",
+    imageUrl:
+      "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f3d7.png",
+  },
+  "poly-dash": {
+    name: "Poly Dash",
+    imageUrl:
+      "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f53a.png",
+  },
 };
 
 /**

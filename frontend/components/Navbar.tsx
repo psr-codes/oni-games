@@ -13,52 +13,58 @@ export default function Navbar() {
   const account = useCurrentAccount();
 
   const navLinks = [
-    { name: "Games", href: "/games", icon: "🎮" },
+    { name: "Home", href: "/", icon: "🏠" },
+    { name: "Play", href: "/games", icon: "🎮" },
+    { name: "Casino", href: "/casino", icon: "🎰" },
     { name: "Leaderboard", href: "/leaderboard", icon: "🏆" },
     { name: "Marketplace", href: "/marketplace", icon: "🛒" },
-    ...(isConnected ? [{ name: "My NFTs", href: "/my-nfts", icon: "🖼️" }] : []),
+    ...(isConnected
+      ? [
+          { name: "My NFTs", href: "/my-nfts", icon: "🖼️" },
+          { name: "Profile", href: "/profile", icon: "👤" },
+        ]
+      : []),
   ];
 
   const isActive = (path: string) => pathname === path;
 
   return (
-    <nav className="sticky top-0 left-0 right-0 z-50 bg-gray-950/80 backdrop-blur-xl border-b border-purple-500/10">
-      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+    <nav className="sticky top-0 left-0 right-0 z-50 bg-[#111a2e]/90 backdrop-blur-xl border-b border-cyan-500/10">
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xl font-black text-white shadow-lg shadow-purple-500/25 group-hover:shadow-purple-500/40 transition-shadow">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-teal-500 flex items-center justify-center text-lg font-black text-white shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40 transition-shadow">
             鬼
           </div>
-          <span className="text-xl font-bold text-white tracking-tight group-hover:text-purple-400 transition-colors">
-            Oni Games
+          <span className="text-lg font-bold text-slate-50 tracking-tight">
+            <span className="text-cyan-400">Oni</span>Games
           </span>
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-6">
           <div className="flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                   isActive(link.href)
-                    ? "text-purple-400 bg-purple-500/10"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                    ? "text-cyan-400 bg-cyan-400/10 border border-cyan-400/20"
+                    : "text-slate-400 hover:text-slate-100 hover:bg-white/5"
                 }`}
               >
-                <span className="mr-1.5">{link.icon}</span>
                 {link.name}
               </Link>
             ))}
 
-            {/* Admin Link - only visible when admin wallet connected */}
+            {/* Admin Link */}
             {isAdmin && (
               <Link
                 href="/admin"
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
                   isActive("/admin")
-                    ? "text-amber-400 bg-amber-500/10"
+                    ? "text-amber-400 bg-amber-500/10 border border-amber-400/20"
                     : "text-amber-400/70 hover:text-amber-400 hover:bg-amber-500/10"
                 }`}
               >
@@ -79,7 +85,7 @@ export default function Navbar() {
             )}
           </div>
 
-          <div className="pl-6 border-l border-gray-800">
+          <div className="pl-4 border-l border-slate-700/40">
             <ConnectButton className="cursor-pointer" />
           </div>
         </div>
@@ -91,7 +97,7 @@ export default function Navbar() {
           </div>
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-2 text-gray-400 hover:text-white"
+            className="p-2 text-slate-400 hover:text-slate-100"
           >
             {isMobileMenuOpen ? (
               <svg
@@ -128,17 +134,17 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-gray-900/95 backdrop-blur-xl border-b border-gray-800 absolute w-full left-0 top-20 shadow-2xl">
-          <div className="px-6 py-6 space-y-2">
+        <div className="md:hidden bg-[#111a2e]/95 backdrop-blur-xl border-b border-slate-700/30 absolute w-full left-0 top-16 shadow-2xl">
+          <div className="px-6 py-5 space-y-1">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`block px-4 py-3 rounded-lg text-lg font-medium ${
+                className={`block px-4 py-3 rounded-xl text-base font-medium transition-all ${
                   isActive(link.href)
-                    ? "text-purple-400 bg-purple-500/10"
-                    : "text-gray-300 hover:bg-white/5"
+                    ? "text-cyan-400 bg-cyan-400/10"
+                    : "text-slate-300 hover:bg-white/5"
                 }`}
               >
                 <span className="mr-2">{link.icon}</span>
@@ -149,7 +155,7 @@ export default function Navbar() {
               <Link
                 href="/admin"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`block px-4 py-3 rounded-lg text-lg font-medium ${
+                className={`block px-4 py-3 rounded-xl text-base font-medium ${
                   isActive("/admin")
                     ? "text-amber-400 bg-amber-500/10"
                     : "text-amber-400/70 hover:text-amber-400"

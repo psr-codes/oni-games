@@ -2,46 +2,63 @@
   "network": "testnet",
   "rpc": "https://rpc-testnet.onelabs.cc:443",
   "explorer": "https://onescan.cc/testnet",
-  "deployedAt": "2026-02-27T21:59:00+05:30",
-  "version": 2,
-  "transactionDigest": "DYavHLHzVbVqrcAzrNXBRVNfLR6otbygrUyRDE6WfQBh",
+  "deployedAt": "2026-03-14T23:49:00+05:30",
+  "version": 3,
+  "transactionDigest": "CQP2mxWDuRpu211txnEC7z6DAcKy9qP51e4FpYGBc35f",
   "gasCost": {
-    "storageCost": "37992400 MIST",
-    "computationCost": "1000000 MIST",
-    "storageRebate": "978120 MIST",
-    "totalSpent": "38014280 MIST (≈ 0.038 OCT)"
+    "totalSpent": "74342280 MIST (≈ 0.074 OCT)"
   },
-  "packageId": "0x6827acf4e5e8ed5392f2774c9375815b74e05ab66b0c6b0dcc5fafec8cde24a2",
+  "packageId": "0x209cd73356acc6c529b627ae4d6e83493a3e2598159afe9948b95c6251c40b52",
+  "modules": ["game_portal", "casino"],
   "objects": {
     "gameStore": {
-      "objectId": "0xf1e8bf394fc3209e64a2c4f98c21607a9797da87f1372f709a3758e20e9f9f98",
+      "objectId": "0x1051e743df0be41da81dc2a93f4ee94ef31ca169eed59ff56caf74432f51baaa",
       "owner": "Shared",
       "type": "game_portal::GameStore",
-      "version": 3349,
-      "digest": "HXXDep5ZzgUajLi2vabNHiV76hJgG7499SQiL3DadNc5"
+      "version": 210395962,
+      "digest": "6Y4XtqBPyyUGWpJrZvSzdTPdgMBsRcxYUxkscAd9t1jK"
     },
     "adminCap": {
-      "objectId": "0x08d627ebcab0371880babe98a6d82abda15a819baf8d984bdb45f8b9d66946d7",
+      "objectId": "0x10d97d43b4b4450a761889663d10a628be3097aba8058eb70443dab6fdc37ad6",
       "owner": "0x6aab5af269952885e12db557a7e7b3b808476ea3aeb6986ca0fb5b2251d41e17",
       "type": "game_portal::AdminCap",
-      "version": 3349,
-      "digest": "Ep4WmrMMxVajc4rejbepzT2gPcbKMiMMSMqFjZ13TLpG"
+      "version": 210395962,
+      "digest": "6hGRCiZb2erVrfDJa3WU7ewy7kP6tx6a7F5Tj5anhYo9"
+    },
+    "houseBankroll": {
+      "objectId": "0xf45716904f701b0f27f67ba81ee622ac010b47b134dca6886a27d42fd51b6ab9",
+      "owner": "Shared",
+      "type": "casino::HouseBankroll",
+      "version": 210395962,
+      "digest": "8o47J41kUPnf17JNmcPtfcJPQhNnTcVkcW1MQHwyqn9E"
+    },
+    "casinoAdminCap": {
+      "objectId": "0x7482cf3517c9291f2e144314b48a9f3ac7ca5f59eabd2659b2610ceb035fe430",
+      "owner": "0x6aab5af269952885e12db557a7e7b3b808476ea3aeb6986ca0fb5b2251d41e17",
+      "type": "casino::CasinoAdminCap",
+      "version": 210395962,
+      "digest": "A76sdZAbsyPjLKKDgNtRFxvX31F5VopFcatzdCraNviW"
     },
     "upgradeCap": {
-      "objectId": "0xbf6c1267f4990dd54ecc733cb4b5c5e9910db8e7609d5cd32667724d1bb797b2",
+      "objectId": "0x542118cc275568b82f7db982ecda403019b34e93bad375059631d5081e570634",
       "owner": "0x6aab5af269952885e12db557a7e7b3b808476ea3aeb6986ca0fb5b2251d41e17",
       "type": "0x2::package::UpgradeCap",
-      "version": 3349,
-      "digest": "D8TbPF5jF66hswmXFrt7MPxANHTzbdBebwAmSpHy2KYw"
+      "version": 210395962,
+      "digest": "ADwRydGehG4yua5bpo56CdLN6exgkRqXQhnh6LXNiLwY"
     }
   },
   "adminAddress": "0x6aab5af269952885e12db557a7e7b3b808476ea3aeb6986ca0fb5b2251d41e17",
   "explorerLinks": {
-    "package": "https://onescan.cc/testnet/object/0x6827acf4e5e8ed5392f2774c9375815b74e05ab66b0c6b0dcc5fafec8cde24a2",
-    "gameStore": "https://onescan.cc/testnet/object/0xf1e8bf394fc3209e64a2c4f98c21607a9797da87f1372f709a3758e20e9f9f98",
-    "transaction": "https://onescan.cc/testnet/tx/DYavHLHzVbVqrcAzrNXBRVNfLR6otbygrUyRDE6WfQBh"
+    "package": "https://onescan.cc/testnet/object/0x209cd73356acc6c529b627ae4d6e83493a3e2598159afe9948b95c6251c40b52",
+    "gameStore": "https://onescan.cc/testnet/object/0x1051e743df0be41da81dc2a93f4ee94ef31ca169eed59ff56caf74432f51baaa",
+    "houseBankroll": "https://onescan.cc/testnet/object/0xf45716904f701b0f27f67ba81ee622ac010b47b134dca6886a27d42fd51b6ab9"
   },
   "previousDeployments": [
+    {
+      "packageId": "0x6827acf4e5e8ed5392f2774c9375815b74e05ab66b0c6b0dcc5fafec8cde24a2",
+      "transactionDigest": "DYavHLHzVbVqrcAzrNXBRVNfLR6otbygrUyRDE6WfQBh",
+      "note": "v2 - game_portal only (with mint_verified_score)"
+    },
     {
       "packageId": "0x1aa0aa825a1074eee7e56077e54efdddda39d22828f374f67d5583d50840c102",
       "transactionDigest": "EvBGtauNWeoNMjabGN3qbMEUSU4KiNKYmUYJkkDhy8qY",

@@ -10,6 +10,7 @@ import { Transaction } from "@mysten/sui/transactions";
 import { useEffect, useState, useCallback } from "react";
 import { PACKAGE_ID, MODULE, GAME_STORE_ID, COIN_TYPE } from "@/config";
 import { useGameStore } from "@/hooks/useGameStore";
+import { GAMES } from "@/game-store/registry";
 
 interface ListingData {
   listingId: string;
@@ -20,18 +21,9 @@ interface ListingData {
   player: string;
   imageUrl: string;
   mintNumber: number;
-  price: number; // in MIST
+  price: number;
   seller: string;
 }
-
-// Map game_id to colors
-const GAME_COLORS: Record<string, string> = {
-  tetris: "from-cyan-500 to-blue-600",
-  snake: "from-green-500 to-emerald-600",
-  "2048": "from-amber-500 to-orange-600",
-  "flappy-bird": "from-yellow-400 to-green-500",
-  "space-invaders": "from-purple-500 to-pink-600",
-};
 
 export default function MarketplacePage() {
   const account = useCurrentAccount();
@@ -62,22 +54,15 @@ export default function MarketplacePage() {
     return oct.toFixed(9);
   };
 
-  // Fetch all Listing objects via querying by type
   const fetchListings = useCallback(async () => {
     setLoading(true);
     try {
-      const listingType = `${PACKAGE_ID}::${MODULE}::Listing`;
-
-      // Query all events of type NFTListed to discover listing IDs.
-      // Since Listings are shared objects, we can't use getOwnedObjects.
-      // Instead, we use queryEvents and then multi-get the objects.
       const listedEvents = await suiClient.queryEvents({
         query: { MoveEventType: `${PACKAGE_ID}::${MODULE}::NFTListed` },
         order: "descending",
         limit: 100,
       });
 
-      // Get all listing IDs from events
       const listingIds = listedEvents.data
         .map((e: any) => e.parsedJson?.listing_id)
         .filter(Boolean) as string[];
@@ -88,10 +73,7 @@ export default function MarketplacePage() {
         return;
       }
 
-      // De-duplicate
       const uniqueIds = [...new Set(listingIds)];
-
-      // Multi-get listing objects
       const objects = await suiClient.multiGetObjects({
         ids: uniqueIds,
         options: { showContent: true, showOwner: true },
@@ -99,11 +81,9 @@ export default function MarketplacePage() {
 
       const parsed: ListingData[] = objects
         .map((obj) => {
-          // If object doesn't exist (was bought/delisted), skip
           if (!obj.data?.content) return null;
           const fields = (obj.data.content as any)?.fields;
           if (!fields) return null;
-
           const nftFields = fields.nft?.fields;
           if (!nftFields) return null;
 
@@ -122,7 +102,6 @@ export default function MarketplacePage() {
         })
         .filter(Boolean) as ListingData[];
 
-      // Sort by price ascending
       parsed.sort((a, b) => a.price - b.price);
       setListings(parsed);
     } catch (err) {
@@ -136,16 +115,12 @@ export default function MarketplacePage() {
     fetchListings();
   }, [fetchListings]);
 
-  // ---- Buy NFT ----
   const handleBuy = async (listing: ListingData) => {
     if (!account?.address) return;
     setBuyingId(listing.listingId);
 
     try {
       const tx = new Transaction();
-
-      // Split exact price from gas coin — avoids conflicts with wallet gas selection.
-      // On OneChain, gas is OCT, so this pulls payment from the same gas coin.
       const [paymentCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(listing.price)]);
 
       tx.moveCall({
@@ -190,7 +165,6 @@ export default function MarketplacePage() {
     }
   };
 
-  // ---- Delist NFT ----
   const handleDelist = (listing: ListingData) => {
     setDelistingId(listing.listingId);
 
@@ -225,7 +199,6 @@ export default function MarketplacePage() {
     );
   };
 
-  // Unique games for filter
   const gameOptions = [...new Set(listings.map((l) => l.gameId))];
   const filtered =
     filterGame === "all"
@@ -233,16 +206,16 @@ export default function MarketplacePage() {
       : listings.filter((l) => l.gameId === filterGame);
 
   return (
-    <div className="min-h-screen bg-gray-950 py-12">
+    <div className="min-h-screen bg-[#111a2e] py-10">
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
-        <div className="mb-10">
-          <h1 className="text-4xl font-bold text-white mb-3">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-50 mb-2">
             🛒 NFT Marketplace
           </h1>
-          <p className="text-gray-400 text-lg">
+          <p className="text-slate-400">
             Buy, sell, and trade Score NFTs from top players.
-            <span className="text-purple-400 font-medium ml-2">
+            <span className="text-cyan-400 font-medium ml-2">
               {listings.length} listing{listings.length !== 1 ? "s" : ""} live
             </span>
           </p>
@@ -253,8 +226,8 @@ export default function MarketplacePage() {
           <div
             className={`mb-6 p-4 rounded-xl border text-sm font-medium ${
               txStatus.type === "success"
-                ? "bg-green-500/10 border-green-500/30 text-green-400"
-                : "bg-red-500/10 border-red-500/30 text-red-400"
+                ? "bg-green-500/10 border-green-500/20 text-green-400"
+                : "bg-red-500/10 border-red-500/20 text-red-400"
             }`}
           >
             {txStatus.message}
@@ -264,31 +237,34 @@ export default function MarketplacePage() {
         {/* Filters */}
         {gameOptions.length > 1 && (
           <div className="mb-8 flex items-center gap-3">
-            <span className="text-sm text-gray-500">Filter by game:</span>
+            <span className="text-sm text-slate-500">Filter by game:</span>
             <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => setFilterGame("all")}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                   filterGame === "all"
-                    ? "bg-purple-600 text-white"
-                    : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                    ? "bg-cyan-400/10 text-cyan-400 border border-cyan-400/20"
+                    : "bg-[#1a2540] text-slate-400 border border-slate-700/20 hover:bg-[#1f2d4d]"
                 }`}
               >
                 All
               </button>
-              {gameOptions.map((game) => (
-                <button
-                  key={game}
-                  onClick={() => setFilterGame(game)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors capitalize ${
-                    filterGame === game
-                      ? "bg-purple-600 text-white"
-                      : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-                  }`}
-                >
-                  {game}
-                </button>
-              ))}
+              {gameOptions.map((game) => {
+                const meta = GAMES[game];
+                return (
+                  <button
+                    key={game}
+                    onClick={() => setFilterGame(game)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors capitalize ${
+                      filterGame === game
+                        ? "bg-cyan-400/10 text-cyan-400 border border-cyan-400/20"
+                        : "bg-[#1a2540] text-slate-400 border border-slate-700/20 hover:bg-[#1f2d4d]"
+                    }`}
+                  >
+                    {meta?.emoji || ""} {meta?.name || game}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -296,8 +272,8 @@ export default function MarketplacePage() {
         {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-20">
-            <div className="flex items-center gap-3 text-gray-400">
-              <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center gap-3 text-slate-400">
+              <div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
               Loading marketplace...
             </div>
           </div>
@@ -307,13 +283,13 @@ export default function MarketplacePage() {
         {!loading && listings.length === 0 && (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">🏪</div>
-            <h3 className="text-xl font-bold text-white mb-2">
+            <h3 className="text-xl font-bold text-slate-50 mb-2">
               No Listings Yet
             </h3>
-            <p className="text-gray-500 mb-6 max-w-md mx-auto">
-              No NFTs are currently listed for sale. Mint a Score NFT and list
-              it from your{" "}
-              <a href="/my-nfts" className="text-purple-400 hover:underline">
+            <p className="text-slate-500 mb-6 max-w-md mx-auto">
+              No NFTs are currently listed for sale. Mint a Score NFT and list it
+              from your{" "}
+              <a href="/my-nfts" className="text-cyan-400 hover:underline">
                 My NFTs
               </a>{" "}
               page!
@@ -325,18 +301,19 @@ export default function MarketplacePage() {
         {!loading && listings.length > 0 && filtered.length === 0 && (
           <div className="text-center py-20">
             <div className="text-4xl mb-3">🔍</div>
-            <p className="text-gray-400">
-              No listings found for "{filterGame}".
+            <p className="text-slate-400">
+              No listings found for &quot;{filterGame}&quot;.
             </p>
           </div>
         )}
 
         {/* Listing Grid */}
         {!loading && filtered.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {filtered.map((listing) => {
-              const gradient =
-                GAME_COLORS[listing.gameId] || "from-purple-500 to-pink-600";
+              const meta = GAMES[listing.gameId];
+              const gradient = meta?.color || "from-slate-500 to-slate-600";
+              const emoji = meta?.emoji || "🏆";
               const isSeller =
                 account?.address &&
                 listing.seller.toLowerCase() === account.address.toLowerCase();
@@ -346,35 +323,17 @@ export default function MarketplacePage() {
               return (
                 <div
                   key={listing.listingId}
-                  className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden hover:border-purple-500/40 hover:shadow-xl hover:shadow-purple-900/10 transition-all duration-300 group"
+                  className="bg-[#1a2540] rounded-xl border border-slate-700/20 overflow-hidden hover:border-cyan-400/20 hover:shadow-xl hover:shadow-cyan-900/10 transition-all duration-300 group"
                 >
-                  {/* Card header */}
                   <div
-                    className={`h-32 bg-gradient-to-br ${gradient} flex items-center justify-center relative`}
+                    className={`h-28 bg-gradient-to-br ${gradient} flex items-center justify-center relative`}
                   >
-                    {listing.imageUrl ? (
-                      <img
-                        src={listing.imageUrl}
-                        alt={listing.gameName}
-                        className="w-14 h-14 object-contain drop-shadow-lg group-hover:scale-110 transition-transform"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = "none";
-                          (e.target as HTMLImageElement)
-                            .parentElement!.querySelector(".fallback-emoji")!
-                            .classList.remove("hidden");
-                        }}
-                      />
-                    ) : null}
-                    <span
-                      className={`text-4xl group-hover:scale-110 transition-transform fallback-emoji ${listing.imageUrl ? "hidden" : ""}`}
-                    >
-                      🏆
+                    <span className="text-4xl drop-shadow-lg group-hover:scale-110 transition-transform">
+                      {emoji}
                     </span>
-                    {/* Mint badge */}
                     <div className="absolute top-3 right-3 bg-black/30 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-bold text-white border border-white/10">
                       #{listing.mintNumber}
                     </div>
-                    {/* Seller badge */}
                     {isSeller && (
                       <div className="absolute top-3 left-3 bg-amber-500/80 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-bold text-black">
                         Your Listing
@@ -382,47 +341,42 @@ export default function MarketplacePage() {
                     )}
                   </div>
 
-                  {/* Card body */}
-                  <div className="p-5">
+                  <div className="p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-lg font-bold text-white">
+                      <h3 className="text-base font-bold text-slate-50">
                         {listing.gameName}
                       </h3>
-                      <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded">
+                      <span className="text-xs text-slate-500 bg-[#111a2e] px-2 py-0.5 rounded">
                         {listing.gameId}
                       </span>
                     </div>
 
-                    {/* Score */}
-                    <div className="bg-gray-950 rounded-xl p-3 mb-3 text-center">
-                      <div className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">
+                    <div className="bg-[#111a2e] rounded-xl p-2.5 mb-2 text-center">
+                      <div className="text-xs text-slate-500 uppercase tracking-wider mb-0.5">
                         Score
                       </div>
-                      <div className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                      <div className="text-xl font-bold text-transparent bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text">
                         {listing.score.toLocaleString()}
                       </div>
                     </div>
 
-                    {/* Price */}
-                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 mb-3 text-center">
+                    <div className="bg-emerald-500/8 border border-emerald-400/15 rounded-xl p-2.5 mb-3 text-center">
                       <div className="text-xs text-emerald-400/60 uppercase tracking-wider mb-0.5">
                         Price
                       </div>
-                      <div className="text-xl font-bold text-emerald-400">
+                      <div className="text-lg font-bold text-emerald-400">
                         {formatOCT(listing.price)} OCT
                       </div>
                     </div>
 
-                    {/* Seller */}
-                    <div className="flex items-center justify-between text-xs mb-4">
-                      <span className="text-gray-600">Seller</span>
-                      <span className="text-gray-400 font-mono">
+                    <div className="flex items-center justify-between text-xs mb-3">
+                      <span className="text-slate-600">Seller</span>
+                      <span className="text-slate-400 font-mono">
                         {listing.seller.slice(0, 8)}...
                         {listing.seller.slice(-4)}
                       </span>
                     </div>
 
-                    {/* Actions */}
                     {!account?.address ? (
                       <div className="text-center">
                         <ConnectButton />
@@ -431,7 +385,7 @@ export default function MarketplacePage() {
                       <button
                         onClick={() => handleDelist(listing)}
                         disabled={isTxPending || isDelisting}
-                        className="w-full px-4 py-3 bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-400 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full px-4 py-2.5 bg-red-500/10 hover:bg-red-500/15 border border-red-400/20 text-red-400 rounded-xl font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isDelisting ? (
                           <span className="flex items-center justify-center gap-2">
@@ -446,7 +400,7 @@ export default function MarketplacePage() {
                       <button
                         onClick={() => handleBuy(listing)}
                         disabled={isTxPending || isBuying}
-                        className="w-full px-4 py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 disabled:from-gray-700 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all"
+                        className="w-full px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed text-white rounded-xl font-bold text-sm transition-all"
                       >
                         {isBuying ? (
                           <span className="flex items-center justify-center gap-2">
@@ -466,16 +420,16 @@ export default function MarketplacePage() {
         )}
 
         {/* Marketplace info */}
-        <div className="mt-12 bg-gray-900/50 rounded-2xl border border-gray-800/50 p-6">
-          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">
+        <div className="mt-12 bg-[#1a2540]/50 rounded-2xl border border-slate-700/15 p-6">
+          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">
             How it works
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-gray-500">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-slate-500">
             <div>
               <div className="text-lg mb-1">1️⃣ List</div>
               <p>
                 Go to{" "}
-                <a href="/my-nfts" className="text-purple-400 hover:underline">
+                <a href="/my-nfts" className="text-cyan-400 hover:underline">
                   My NFTs
                 </a>{" "}
                 and click &quot;List&quot; on any NFT. Set your price in OCT.

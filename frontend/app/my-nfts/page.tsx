@@ -10,6 +10,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { PACKAGE_ID, MODULE, GAME_STORE_ID, COIN_TYPE } from "@/config";
 import { useGameStore } from "@/hooks/useGameStore";
+import { GAMES } from "@/game-store/registry";
 
 interface ScoreNFT {
   id: string;
@@ -20,15 +21,6 @@ interface ScoreNFT {
   imageUrl: string;
   mintNumber: number;
 }
-
-// Map game_id to colors for visual flair
-const GAME_COLORS: Record<string, string> = {
-  tetris: "from-cyan-500 to-blue-600",
-  snake: "from-green-500 to-emerald-600",
-  "2048": "from-amber-500 to-orange-600",
-  "flappy-bird": "from-yellow-400 to-green-500",
-  "space-invaders": "from-purple-500 to-pink-600",
-};
 
 export default function MyNFTsPage() {
   const account = useCurrentAccount();
@@ -42,7 +34,6 @@ export default function MyNFTsPage() {
   const [nfts, setNfts] = useState<ScoreNFT[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Modal state
   const [sendModal, setSendModal] = useState<ScoreNFT | null>(null);
   const [listModal, setListModal] = useState<ScoreNFT | null>(null);
   const [recipientAddress, setRecipientAddress] = useState("");
@@ -97,7 +88,6 @@ export default function MyNFTsPage() {
     fetchNFTs();
   }, [fetchNFTs]);
 
-  // ---- Transfer (Send) ----
   const handleSend = () => {
     if (!sendModal || !recipientAddress) return;
     if (!recipientAddress.startsWith("0x") || recipientAddress.length < 10) {
@@ -124,7 +114,7 @@ export default function MyNFTsPage() {
           setSendModal(null);
           setRecipientAddress("");
           clearStatus();
-          fetchNFTs(); // refresh
+          fetchNFTs();
         },
         onError: (err) => {
           setTxStatus({
@@ -137,7 +127,6 @@ export default function MyNFTsPage() {
     );
   };
 
-  // ---- List on Marketplace ----
   const handleList = () => {
     if (!listModal || !listPrice) return;
     const priceNum = parseFloat(listPrice);
@@ -150,7 +139,6 @@ export default function MyNFTsPage() {
       return;
     }
 
-    // Convert OCT to MIST (1 OCT = 1e9 MIST)
     const priceInMist = Math.floor(priceNum * 1_000_000_000);
 
     const tx = new Transaction();
@@ -171,7 +159,7 @@ export default function MyNFTsPage() {
           setListModal(null);
           setListPrice("");
           clearStatus();
-          fetchNFTs(); // refresh — NFT leaves inventory when listed (escrowed)
+          fetchNFTs();
         },
         onError: (err) => {
           setTxStatus({
@@ -184,16 +172,15 @@ export default function MyNFTsPage() {
     );
   };
 
-  // Not connected
   if (!account?.address) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="text-center p-8 bg-gray-900 rounded-2xl border border-gray-800 max-w-md">
+      <div className="min-h-screen bg-[#111a2e] flex items-center justify-center">
+        <div className="text-center p-8 bg-[#1a2540] rounded-2xl border border-slate-700/20 max-w-md">
           <div className="text-5xl mb-4">🔒</div>
-          <h2 className="text-xl font-bold text-white mb-2">
+          <h2 className="text-xl font-bold text-slate-50 mb-2">
             Connect Your Wallet
           </h2>
-          <p className="text-gray-400">
+          <p className="text-slate-400">
             Connect your wallet to view your Score NFTs.
           </p>
         </div>
@@ -202,14 +189,14 @@ export default function MyNFTsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 py-12">
+    <div className="min-h-screen bg-[#111a2e] py-10">
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
-        <div className="mb-10">
-          <h1 className="text-4xl font-bold text-white mb-3">🏆 My NFTs</h1>
-          <p className="text-gray-400 text-lg">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-50 mb-2">🏆 My NFTs</h1>
+          <p className="text-slate-400">
             Your on-chain score collection —{" "}
-            <span className="text-purple-400 font-medium">
+            <span className="text-cyan-400 font-medium">
               {nfts.length} NFT{nfts.length !== 1 ? "s" : ""}
             </span>
           </p>
@@ -220,8 +207,8 @@ export default function MyNFTsPage() {
           <div
             className={`mb-6 p-4 rounded-xl border text-sm font-medium ${
               txStatus.type === "success"
-                ? "bg-green-500/10 border-green-500/30 text-green-400"
-                : "bg-red-500/10 border-red-500/30 text-red-400"
+                ? "bg-green-500/10 border-green-500/20 text-green-400"
+                : "bg-red-500/10 border-red-500/20 text-red-400"
             }`}
           >
             {txStatus.message}
@@ -231,8 +218,8 @@ export default function MyNFTsPage() {
         {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-20">
-            <div className="flex items-center gap-3 text-gray-400">
-              <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center gap-3 text-slate-400">
+              <div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
               Loading your NFTs...
             </div>
           </div>
@@ -242,14 +229,16 @@ export default function MyNFTsPage() {
         {!loading && nfts.length === 0 && (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">🎮</div>
-            <h3 className="text-xl font-bold text-white mb-2">No NFTs Yet</h3>
-            <p className="text-gray-500 mb-6 max-w-md mx-auto">
+            <h3 className="text-xl font-bold text-slate-50 mb-2">
+              No NFTs Yet
+            </h3>
+            <p className="text-slate-500 mb-6 max-w-md mx-auto">
               Play a game, beat your high score, and mint it as an NFT to see it
               here!
             </p>
             <Link
               href="/games"
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:from-purple-500 hover:to-pink-500 transition-all"
+              className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-teal-500 text-white rounded-xl font-medium hover:from-cyan-400 hover:to-teal-400 transition-all"
             >
               🕹️ Play Games
             </Link>
@@ -258,78 +247,58 @@ export default function MyNFTsPage() {
 
         {/* NFT Grid */}
         {!loading && nfts.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {nfts.map((nft) => {
-              const gradient =
-                GAME_COLORS[nft.gameId] || "from-purple-500 to-pink-600";
+              const meta = GAMES[nft.gameId];
+              const gradient = meta?.color || "from-slate-500 to-slate-600";
+              const emoji = meta?.emoji || "🏆";
               return (
                 <div
                   key={nft.id}
-                  className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden hover:border-purple-500/40 hover:shadow-xl hover:shadow-purple-900/10 transition-all duration-300 group"
+                  className="bg-[#1a2540] rounded-xl border border-slate-700/20 overflow-hidden hover:border-cyan-400/20 hover:shadow-xl hover:shadow-cyan-900/10 transition-all duration-300 group"
                 >
-                  {/* Card header with game gradient */}
                   <div
-                    className={`h-36 bg-gradient-to-br ${gradient} flex items-center justify-center relative`}
+                    className={`h-32 bg-gradient-to-br ${gradient} flex items-center justify-center relative`}
                   >
-                    {nft.imageUrl ? (
-                      <img
-                        src={nft.imageUrl}
-                        alt={nft.gameName}
-                        className="w-16 h-16 object-contain drop-shadow-lg group-hover:scale-110 transition-transform"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = "none";
-                          (e.target as HTMLImageElement)
-                            .parentElement!.querySelector(".fallback-emoji")!
-                            .classList.remove("hidden");
-                        }}
-                      />
-                    ) : null}
-                    <span
-                      className={`text-5xl group-hover:scale-110 transition-transform fallback-emoji ${nft.imageUrl ? "hidden" : ""}`}
-                    >
-                      🏆
+                    <span className="text-4xl drop-shadow-lg group-hover:scale-110 transition-transform">
+                      {emoji}
                     </span>
-                    {/* Mint number badge */}
                     <div className="absolute top-3 right-3 bg-black/30 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-bold text-white border border-white/10">
                       #{nft.mintNumber}
                     </div>
                   </div>
 
-                  {/* Card body */}
-                  <div className="p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-lg font-bold text-white">
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-base font-bold text-slate-50">
                         {nft.gameName}
                       </h3>
-                      <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded">
+                      <span className="text-xs text-slate-500 bg-[#111a2e] px-2 py-0.5 rounded">
                         {nft.gameId}
                       </span>
                     </div>
 
-                    {/* Score */}
-                    <div className="bg-gray-950 rounded-xl p-4 mb-4 text-center">
-                      <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">
+                    <div className="bg-[#111a2e] rounded-xl p-3 mb-3 text-center">
+                      <div className="text-xs text-slate-500 uppercase tracking-wider mb-0.5">
                         Score
                       </div>
-                      <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                      <div className="text-2xl font-bold text-transparent bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text">
                         {nft.score.toLocaleString()}
                       </div>
                     </div>
 
-                    {/* Object ID (truncated) */}
-                    <div className="flex items-center justify-between text-xs mb-4">
-                      <span className="text-gray-600">Object ID</span>
+                    <div className="flex items-center justify-between text-xs mb-3">
+                      <span className="text-slate-600">Object ID</span>
                       <a
                         href={`https://onescan.cc/testnet/objectDetails?address=${nft.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-purple-400 hover:text-purple-300 font-mono transition-colors"
+                        className="text-cyan-400 hover:text-cyan-300 font-mono transition-colors"
                       >
                         {nft.id.slice(0, 8)}...{nft.id.slice(-6)}
                       </a>
                     </div>
 
-                    {/* Action Buttons */}
                     <div className="flex gap-2">
                       <button
                         onClick={() => {
@@ -337,7 +306,7 @@ export default function MyNFTsPage() {
                           setListModal(null);
                         }}
                         disabled={isTxPending}
-                        className="flex-1 px-3 py-2.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-400 rounded-xl text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 px-3 py-2 bg-blue-500/10 hover:bg-blue-500/15 border border-blue-400/20 text-blue-400 rounded-xl text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         📤 Send
                       </button>
@@ -347,7 +316,7 @@ export default function MyNFTsPage() {
                           setSendModal(null);
                         }}
                         disabled={isTxPending}
-                        className="flex-1 px-3 py-2.5 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-400 rounded-xl text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-400/20 text-emerald-400 rounded-xl text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         🏷️ List
                       </button>
@@ -360,32 +329,31 @@ export default function MyNFTsPage() {
         )}
       </div>
 
-      {/* ======= Send Modal ======= */}
+      {/* Send Modal */}
       {sendModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-2xl border border-gray-700 max-w-md w-full p-6 shadow-2xl">
+        <div className="fixed inset-0 bg-[#111a2e]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1a2540] rounded-2xl border border-slate-700/30 max-w-md w-full p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white">📤 Send NFT</h3>
+              <h3 className="text-xl font-bold text-slate-50">📤 Send NFT</h3>
               <button
                 onClick={() => {
                   setSendModal(null);
                   setRecipientAddress("");
                 }}
-                className="text-gray-500 hover:text-white transition-colors text-xl"
+                className="text-slate-500 hover:text-slate-200 transition-colors text-xl"
               >
                 ✕
               </button>
             </div>
 
-            {/* NFT preview */}
-            <div className="bg-gray-950 rounded-xl p-4 mb-6 border border-gray-800">
+            <div className="bg-[#111a2e] rounded-xl p-4 mb-6 border border-slate-700/20">
               <div className="flex items-center gap-3">
                 <span className="text-3xl">🏆</span>
                 <div>
-                  <div className="text-white font-bold">
+                  <div className="text-slate-50 font-bold">
                     {sendModal.gameName}
                   </div>
-                  <div className="text-sm text-gray-400">
+                  <div className="text-sm text-slate-400">
                     Score: {sendModal.score.toLocaleString()} • Mint #
                     {sendModal.mintNumber}
                   </div>
@@ -393,7 +361,7 @@ export default function MyNFTsPage() {
               </div>
             </div>
 
-            <label className="block text-sm text-gray-400 mb-2">
+            <label className="block text-sm text-slate-400 mb-2">
               Recipient Address
             </label>
             <input
@@ -401,7 +369,7 @@ export default function MyNFTsPage() {
               placeholder="0x..."
               value={recipientAddress}
               onChange={(e) => setRecipientAddress(e.target.value)}
-              className="w-full bg-gray-950 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500 transition-colors font-mono text-sm mb-6"
+              className="w-full bg-[#111a2e] border border-slate-700/30 rounded-xl px-4 py-3 text-slate-50 placeholder:text-slate-600 focus:outline-none focus:border-cyan-400/40 transition-colors font-mono text-sm mb-6"
             />
 
             <div className="flex gap-3">
@@ -410,14 +378,14 @@ export default function MyNFTsPage() {
                   setSendModal(null);
                   setRecipientAddress("");
                 }}
-                className="flex-1 px-4 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl font-medium transition-colors"
+                className="flex-1 px-4 py-3 bg-[#111a2e] hover:bg-[#0f1628] text-slate-300 rounded-xl font-medium transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSend}
                 disabled={isTxPending || !recipientAddress}
-                className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors"
+                className="flex-1 px-4 py-3 bg-blue-500 hover:bg-blue-400 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors"
               >
                 {isTxPending ? (
                   <span className="flex items-center justify-center gap-2">
@@ -433,12 +401,12 @@ export default function MyNFTsPage() {
         </div>
       )}
 
-      {/* ======= List Modal ======= */}
+      {/* List Modal */}
       {listModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-2xl border border-gray-700 max-w-md w-full p-6 shadow-2xl">
+        <div className="fixed inset-0 bg-[#111a2e]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1a2540] rounded-2xl border border-slate-700/30 max-w-md w-full p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white">
+              <h3 className="text-xl font-bold text-slate-50">
                 🏷️ List on Marketplace
               </h3>
               <button
@@ -446,21 +414,20 @@ export default function MyNFTsPage() {
                   setListModal(null);
                   setListPrice("");
                 }}
-                className="text-gray-500 hover:text-white transition-colors text-xl"
+                className="text-slate-500 hover:text-slate-200 transition-colors text-xl"
               >
                 ✕
               </button>
             </div>
 
-            {/* NFT preview */}
-            <div className="bg-gray-950 rounded-xl p-4 mb-6 border border-gray-800">
+            <div className="bg-[#111a2e] rounded-xl p-4 mb-6 border border-slate-700/20">
               <div className="flex items-center gap-3">
                 <span className="text-3xl">🏆</span>
                 <div>
-                  <div className="text-white font-bold">
+                  <div className="text-slate-50 font-bold">
                     {listModal.gameName}
                   </div>
-                  <div className="text-sm text-gray-400">
+                  <div className="text-sm text-slate-400">
                     Score: {listModal.score.toLocaleString()} • Mint #
                     {listModal.mintNumber}
                   </div>
@@ -468,7 +435,7 @@ export default function MyNFTsPage() {
               </div>
             </div>
 
-            <label className="block text-sm text-gray-400 mb-2">
+            <label className="block text-sm text-slate-400 mb-2">
               Price (in OCT)
             </label>
             <input
@@ -478,18 +445,18 @@ export default function MyNFTsPage() {
               placeholder="e.g. 1.5"
               value={listPrice}
               onChange={(e) => setListPrice(e.target.value)}
-              className="w-full bg-gray-950 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:border-emerald-500 transition-colors mb-2"
+              className="w-full bg-[#111a2e] border border-slate-700/30 rounded-xl px-4 py-3 text-slate-50 placeholder:text-slate-600 focus:outline-none focus:border-emerald-400/40 transition-colors mb-2"
             />
             {listPrice &&
               !isNaN(parseFloat(listPrice)) &&
               parseFloat(listPrice) > 0 && (
-                <p className="text-xs text-gray-500 mb-4">
+                <p className="text-xs text-slate-500 mb-4">
                   ≈{" "}
                   {Math.floor(
                     parseFloat(listPrice) * 1_000_000_000,
                   ).toLocaleString()}{" "}
                   MIST
-                  <span className="text-gray-600 ml-2">
+                  <span className="text-slate-600 ml-2">
                     • {marketFeePercent}% marketplace fee on sale
                   </span>
                 </p>
@@ -504,7 +471,7 @@ export default function MyNFTsPage() {
                   setListModal(null);
                   setListPrice("");
                 }}
-                className="flex-1 px-4 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl font-medium transition-colors"
+                className="flex-1 px-4 py-3 bg-[#111a2e] hover:bg-[#0f1628] text-slate-300 rounded-xl font-medium transition-colors"
               >
                 Cancel
               </button>
@@ -513,7 +480,7 @@ export default function MyNFTsPage() {
                 disabled={
                   isTxPending || !listPrice || parseFloat(listPrice) <= 0
                 }
-                className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors"
+                className="flex-1 px-4 py-3 bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors"
               >
                 {isTxPending ? (
                   <span className="flex items-center justify-center gap-2">

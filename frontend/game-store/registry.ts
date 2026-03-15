@@ -16,6 +16,14 @@ export interface GameMeta {
 }
 
 export const GAMES: Record<string, GameMeta> = {
+  "poly-dash": {
+    slug: "poly-dash",
+    name: "Poly Dash",
+    emoji: "🔺",
+    color: "from-pink-500 to-fuchsia-600",
+    description: "Geometry Dash inspired — jump, dodge spikes, reach the finish!",
+    component: () => import("./poly-dash/PolyDashGame"),
+  },
   tetris: {
     slug: "tetris",
     name: "Tetris",
@@ -64,6 +72,24 @@ export const GAMES: Record<string, GameMeta> = {
     description: "Jump higher, stomp monsters, grab jetpacks — don't fall!",
     component: () => import("./doodle-jump/DoodleJumpGame"),
   },
+  "tower-bloxx": {
+    slug: "tower-bloxx",
+    name: "Tower Bloxx",
+    emoji: "🏗️",
+    color: "from-indigo-400 to-violet-600",
+    description: "Stack blocks from a swinging crane — build the tallest tower!",
+    component: () => import("./tower-bloxx/TowerBloxx"),
+  },
 };
 
-export const GAMES_LIST: GameMeta[] = Object.values(GAMES);
+// Explicit array to guarantee display order (JS objects sort numeric keys first)
+export const GAMES_LIST: GameMeta[] = [
+  GAMES["poly-dash"],
+  GAMES["tetris"],
+  GAMES["space-invaders"],
+  GAMES["snake"],
+  GAMES["2048"],
+  GAMES["bubble-pop"],
+  GAMES["doodle-jump"],
+  GAMES["tower-bloxx"],
+];

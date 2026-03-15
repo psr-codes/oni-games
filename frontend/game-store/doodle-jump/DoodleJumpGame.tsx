@@ -179,7 +179,7 @@ export default function DoodleJumpGame({
     const resize = () => {
       const sx = window.innerWidth / CW;
       const sy = window.innerHeight / CH;
-      setScale(Math.min(sx, sy, 1.0) * 0.9);
+      setScale(Math.min(sx, sy, 1.0) * 1);
     };
     resize();
     window.addEventListener("resize", resize);

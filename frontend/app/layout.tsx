@@ -20,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${outfit.className} bg-gray-950 text-white min-h-screen`}
+        className={`${outfit.className} bg-[#111a2e] text-slate-50 min-h-screen`}
       >
         <Providers>
           <Navbar />
