@@ -2,13 +2,13 @@
   "network": "testnet",
   "rpc": "https://rpc-testnet.onelabs.cc:443",
   "explorer": "https://onescan.cc/testnet",
-  "deployedAt": "2026-03-14T23:49:00+05:30",
-  "version": 3,
-  "transactionDigest": "CQP2mxWDuRpu211txnEC7z6DAcKy9qP51e4FpYGBc35f",
+  "deployedAt": "2026-03-16T23:02:00+05:30",
+  "version": 4,
+  "transactionDigest": "(upgrade tx - play_range_wager)",
   "gasCost": {
-    "totalSpent": "74342280 MIST (≈ 0.074 OCT)"
+    "totalSpent": "70011420 MIST (≈ 0.070 OCT)"
   },
-  "packageId": "0x209cd73356acc6c529b627ae4d6e83493a3e2598159afe9948b95c6251c40b52",
+  "packageId": "0x8e9ea1353c18659082cb5d66e26ce7b8599c70fc8e5b6e4adc21b621cf688a2a",
   "modules": ["game_portal", "casino"],
   "objects": {
     "gameStore": {
@@ -49,11 +49,16 @@
   },
   "adminAddress": "0x6aab5af269952885e12db557a7e7b3b808476ea3aeb6986ca0fb5b2251d41e17",
   "explorerLinks": {
-    "package": "https://onescan.cc/testnet/object/0x209cd73356acc6c529b627ae4d6e83493a3e2598159afe9948b95c6251c40b52",
+    "package": "https://onescan.cc/testnet/object/0x8e9ea1353c18659082cb5d66e26ce7b8599c70fc8e5b6e4adc21b621cf688a2a",
     "gameStore": "https://onescan.cc/testnet/object/0x1051e743df0be41da81dc2a93f4ee94ef31ca169eed59ff56caf74432f51baaa",
     "houseBankroll": "https://onescan.cc/testnet/object/0xf45716904f701b0f27f67ba81ee622ac010b47b134dca6886a27d42fd51b6ab9"
   },
   "previousDeployments": [
+    {
+      "packageId": "0x209cd73356acc6c529b627ae4d6e83493a3e2598159afe9948b95c6251c40b52",
+      "transactionDigest": "CQP2mxWDuRpu211txnEC7z6DAcKy9qP51e4FpYGBc35f",
+      "note": "v3 - game_portal + casino (play_instant_wager, session escrow)"
+    },
     {
       "packageId": "0x6827acf4e5e8ed5392f2774c9375815b74e05ab66b0c6b0dcc5fafec8cde24a2",
       "transactionDigest": "DYavHLHzVbVqrcAzrNXBRVNfLR6otbygrUyRDE6WfQBh",

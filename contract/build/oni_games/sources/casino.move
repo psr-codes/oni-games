@@ -42,6 +42,7 @@ const E_INVALID_FEE_BPS: u64 = 12;
 const E_NONCE_ALREADY_USED: u64 = 13;
 const E_CASINO_PAUSED: u64 = 14;
 const E_INVALID_GUESS: u64 = 15;
+const E_INVALID_RANGE_BOUNDS: u64 = 16;
 
 // ============= Constants =============
 /// Maximum basis points (100% = 10_000 BPS)
@@ -110,6 +111,20 @@ public struct InstantWagerPlayed has copy, drop {
     game_id: String,
     wager_amount: u64,
     guess: u64,
+    result: u64,
+    won: bool,
+    payout: u64,
+    multiplier_bps: u64,
+}
+
+/// Emitted when a range-based wager game is played and resolved.
+/// Used by games like Dice Roll (over/under) and Color Prediction (weighted ranges).
+public struct RangeWagerPlayed has copy, drop {
+    player: address,
+    game_id: String,
+    wager_amount: u64,
+    guess_low: u64,
+    guess_high: u64,
     result: u64,
     won: bool,
     payout: u64,
@@ -364,6 +379,97 @@ entry fun play_instant_wager(
             game_id,
             wager_amount,
             guess,
+            result,
+            won: false,
+            payout: 0,
+            multiplier_bps,
+        });
+    };
+
+    // Update lifetime stats
+    bankroll.total_wagers = bankroll.total_wagers + wager_amount;
+    bankroll.total_games = bankroll.total_games + 1;
+}
+
+/// Play a range-based wager game. The contract generates a random number
+/// in [0, game_range) and checks if it falls within [guess_low, guess_high).
+///
+/// This powers games like:
+/// - Dice Roll: "Over 50" → guess_low=51, guess_high=100, game_range=100
+/// - Color Prediction: "Red" → guess_low=0, guess_high=45, game_range=100
+///
+/// Parameters:
+/// - `wager`: The OCT coin being wagered
+/// - `game_id`: Game identifier string (e.g., "dice_roll", "color_prediction")
+/// - `guess_low`: Inclusive lower bound of the winning range
+/// - `guess_high`: Exclusive upper bound of the winning range
+/// - `game_range`: Total number of outcomes (e.g., 100 for percentage-based games)
+/// - `multiplier_bps`: Payout multiplier in basis points (e.g., 19600 = 1.96x)
+entry fun play_range_wager(
+    bankroll: &mut HouseBankroll,
+    rng: &Random,
+    wager: Coin<OCT>,
+    game_id: String,
+    guess_low: u64,
+    guess_high: u64,
+    game_range: u64,
+    multiplier_bps: u64,
+    ctx: &mut TxContext,
+) {
+    // Safety checks
+    assert!(!bankroll.paused, E_CASINO_PAUSED);
+    assert!(game_range >= 2, E_INVALID_RANGE);
+    assert!(guess_low < guess_high, E_INVALID_RANGE_BOUNDS);
+    assert!(guess_high <= game_range, E_INVALID_RANGE_BOUNDS);
+    assert!(multiplier_bps > 0, E_INVALID_MULTIPLIER);
+
+    let player = ctx.sender();
+    let wager_amount = coin::value(&wager);
+
+    // Validate bet size
+    assert!(wager_amount >= bankroll.min_bet, E_BET_TOO_SMALL);
+    assert!(wager_amount <= bankroll.max_bet, E_BET_TOO_LARGE);
+
+    // Calculate potential payout and verify bankroll can cover it
+    let potential_payout = (wager_amount * multiplier_bps) / MAX_BPS;
+    let max_allowed_payout = (balance::value(&bankroll.balance) * bankroll.max_payout_bps) / MAX_BPS;
+    assert!(potential_payout <= max_allowed_payout + wager_amount, E_PAYOUT_EXCEEDS_MAX);
+
+    // Generate random number using OneChain's native RNG
+    let mut generator = random::new_generator(rng, ctx);
+    let result = random::generate_u64_in_range(&mut generator, 0, game_range - 1);
+
+    // Win if result falls within [guess_low, guess_high)
+    let won = (result >= guess_low && result < guess_high);
+
+    if (won) {
+        // Player wins!
+        balance::join(&mut bankroll.balance, coin::into_balance(wager));
+        let payout_coin = coin::take(&mut bankroll.balance, potential_payout, ctx);
+        transfer::public_transfer(payout_coin, player);
+        bankroll.total_payouts = bankroll.total_payouts + potential_payout;
+
+        event::emit(RangeWagerPlayed {
+            player,
+            game_id,
+            wager_amount,
+            guess_low,
+            guess_high,
+            result,
+            won: true,
+            payout: potential_payout,
+            multiplier_bps,
+        });
+    } else {
+        // Player loses — wager goes to house
+        balance::join(&mut bankroll.balance, coin::into_balance(wager));
+
+        event::emit(RangeWagerPlayed {
+            player,
+            game_id,
+            wager_amount,
+            guess_low,
+            guess_high,
             result,
             won: false,
             payout: 0,
