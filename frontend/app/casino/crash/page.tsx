@@ -15,6 +15,7 @@ import {
   HOUSE_BANKROLL_ID,
   COIN_TYPE,
 } from "@/config";
+import { GAME_IMAGES } from "@/game-store/images";
 import { useCasinoStore } from "@/hooks/useCasinoStore";
 import { useSessionHistory } from "@/hooks/useSessionHistory";
 
@@ -771,9 +772,16 @@ export default function CryptoCrashPage() {
                 color: "#fff",
                 letterSpacing: -0.5,
                 margin: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 12
               }}
             >
-              Crypto Crash
+              {GAME_IMAGES["crash"] ? (
+                <img src={GAME_IMAGES["crash"]} alt="" style={{ height: 30, width: 30, objectFit: "contain" }} />
+              ) : null}
+              <span>Crypto Crash</span>
             </h1>
             <p style={{ fontSize: 13, color: "#7a8fb0", marginTop: 5 }}>
               Watch the multiplier climb. Cash out before it crashes — or lose

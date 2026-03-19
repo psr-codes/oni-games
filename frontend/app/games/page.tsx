@@ -56,7 +56,7 @@ export default function GamesPage() {
           <h2 className="text-sm font-bold text-cyan-400 uppercase tracking-wider mb-4">
             🟢 Playable Now
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             {GAMES_LIST.map((game) => (
               <Link
                 key={game.slug}
@@ -65,27 +65,36 @@ export default function GamesPage() {
               >
                 <div className="bg-[#1a2540] rounded-xl border border-slate-700/20 overflow-hidden hover:border-cyan-400/20 hover:shadow-xl hover:shadow-cyan-900/10 transition-all duration-300 h-full flex flex-col">
                   <div
-                    className={`h-36 bg-gradient-to-br ${game.color} flex items-center justify-center relative group-hover:scale-[1.02] transition-transform duration-500`}
+                    className={`h-64 bg-gradient-to-br ${game.color} flex flex-col items-center justify-center relative group-hover:scale-[1.02] transition-transform duration-500 overflow-hidden`}
                   >
-                    <span className="text-5xl group-hover:scale-110 transition-transform drop-shadow-lg">
-                      {game.emoji}
-                    </span>
-                    <div className="absolute top-3 right-3 bg-green-500/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-green-400 border border-green-400/20">
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a2540] via-transparent to-[#1a2540]/20 opacity-90 z-0" />
+                    {game.image ? (
+                      <img 
+                        src={game.image} 
+                        alt={game.name} 
+                        className="w-full h-full object-cover object-top filter drop-shadow-2xl relative z-10 group-hover:scale-110 transition-transform duration-300" 
+                      />
+                    ) : (
+                      <span className="text-5xl group-hover:scale-110 transition-transform drop-shadow-lg relative z-10">
+                        {game.emoji}
+                      </span>
+                    )}
+                    <div className="absolute top-3 right-3 bg-green-500/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-green-400 border border-green-400/20 z-10 shadow-lg">
                       ▶ Play
                     </div>
                   </div>
-                  <div className="p-5 flex-1 flex flex-col">
-                    <h3 className="text-lg font-bold text-slate-50 mb-1 group-hover:text-cyan-400 transition-colors">
+                  <div className="p-4 flex-1 flex flex-col">
+                    <h3 className="text-base font-bold text-slate-50 mb-0.5 group-hover:text-cyan-400 transition-colors">
                       {game.name}
                     </h3>
-                    <p className="text-slate-500 text-sm mb-4">
+                    <p className="text-slate-500 text-[13px] leading-snug mb-3">
                       {game.description}
                     </p>
-                    <div className="mt-auto pt-3 border-t border-slate-700/20 flex items-center justify-between">
-                      <span className="text-xs text-slate-600 bg-[#111a2e] px-3 py-1 rounded-full border border-slate-700/20">
+                    <div className="mt-auto pt-2 border-t border-slate-700/20 flex items-center justify-between">
+                      <span className="text-[10px] text-slate-600 bg-[#111a2e] px-2 py-0.5 rounded-full border border-slate-700/20">
                         Score NFT
                       </span>
-                      <span className="text-cyan-400 text-sm font-medium group-hover:translate-x-1 transition-transform">
+                      <span className="text-cyan-400 text-[13px] font-medium group-hover:translate-x-1 transition-transform">
                         Play Now →
                       </span>
                     </div>
@@ -108,18 +117,19 @@ export default function GamesPage() {
                 className="bg-[#1a2540]/50 rounded-xl border border-slate-700/15 overflow-hidden opacity-60 h-full flex flex-col"
               >
                 <div
-                  className={`h-36 bg-gradient-to-br ${game.color} flex items-center justify-center relative opacity-50`}
+                  className={`h-56 bg-gradient-to-br ${game.color} flex items-center justify-center relative opacity-50 overflow-hidden`}
                 >
-                  <span className="text-5xl drop-shadow-lg">{game.emoji}</span>
-                  <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-xs text-slate-300 border border-white/10">
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#1a2540] via-transparent to-[#1a2540]/20 opacity-90 z-0" />
+                  <span className="text-5xl drop-shadow-lg relative z-10">{game.emoji}</span>
+                  <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] text-slate-300 border border-white/10 z-10 shadow-lg">
                     Coming Soon
                   </div>
                 </div>
-                <div className="p-5 flex-1 flex flex-col">
-                  <h3 className="text-lg font-bold mb-1 text-slate-400">
+                <div className="p-4 flex-1 flex flex-col">
+                  <h3 className="text-base font-bold mb-0.5 text-slate-400">
                     {game.name}
                   </h3>
-                  <p className="text-slate-600 text-sm">{game.description}</p>
+                  <p className="text-slate-600 text-[13px] leading-snug">{game.description}</p>
                 </div>
               </div>
             ))}

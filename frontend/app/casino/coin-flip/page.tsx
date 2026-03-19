@@ -15,6 +15,7 @@ import {
   COIN_TYPE,
 } from "@/config";
 import { useCasinoStore } from "@/hooks/useCasinoStore";
+import { GAME_IMAGES } from "@/game-store/images";
 
 // ─── Constants ──────────────────────────────────────────────
 const SIDES = ["heads", "tails"] as const;
@@ -443,9 +444,16 @@ export default function CoinFlipPage() {
                 color: "#fff",
                 margin: 0,
                 letterSpacing: -0.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 12
               }}
             >
-              🪙 Coin Flip
+              {GAME_IMAGES["coin-flip"] ? (
+                <img src={GAME_IMAGES["coin-flip"]} alt="" style={{ height: 32, width: 32, objectFit: "contain" }} />
+              ) : "🪙"} 
+              <span>Coin Flip</span>
             </h1>
             <p style={{ fontSize: 14, color: "#7a8fb0", marginTop: 6 }}>
               Pick a side. Call the flip. Win {displayMultiplier}× your bet.

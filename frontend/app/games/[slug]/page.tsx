@@ -196,7 +196,11 @@ export default function GamePage() {
             </Link>
             <div className="w-px h-5 bg-slate-700/30" />
             <div className="flex items-center gap-2">
-              <span className="text-xl">{game.emoji}</span>
+              {game.image ? (
+                <img src={game.image} alt="" className="w-6 h-6 object-contain" />
+              ) : (
+                <span className="text-xl">{game.emoji}</span>
+              )}
               <h1 className="text-base font-bold text-slate-50">{game.name}</h1>
             </div>
           </div>
@@ -222,162 +226,177 @@ export default function GamePage() {
 
         {/* Game Over Popup Overlay */}
         {showGameOver && lastScore !== null && (
-          <div className="absolute inset-0 bg-[#111a2e]/70 backdrop-blur-md z-40 flex items-center justify-center p-4">
-            <div className="bg-[#1a2540] border border-slate-700/30 rounded-2xl shadow-2xl shadow-cyan-900/20 max-w-2xl w-full max-h-[85vh] overflow-y-auto">
-              {/* Score Header */}
-              <div className="text-center pt-8 pb-6 px-6 border-b border-slate-700/20">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500 mb-3 font-medium">
-                  Your Final Score
-                </p>
-                <div className="text-6xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-400 to-violet-400 mb-2">
-                  {lastScore.toLocaleString()}
-                </div>
-                <p className="text-slate-500 text-sm">
-                  {game.name} • Game Complete
-                </p>
-              </div>
+          <div
+            className="absolute inset-0 z-40 flex items-center justify-center p-4"
+            style={{ background: "rgba(4, 6, 16, 0.85)", backdropFilter: "blur(12px)" }}
+            onClick={(e) => e.target === e.currentTarget && handleClosePopup()}
+          >
+            {/* Modal */}
+            <div
+              className="relative flex flex-col md:flex-row w-full max-w-[780px] rounded-3xl overflow-hidden"
+              style={{ boxShadow: "0 0 80px rgba(0,200,255,0.12), 0 0 0 1px rgba(255,255,255,0.06)" }}
+            >
+              {/* Close */}
+              <button
+                onClick={handleClosePopup}
+                className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all text-sm"
+              >
+                ✕
+              </button>
 
-              {/* Content */}
-              <div className="p-6 md:p-8">
-                <div className="flex flex-col md:flex-row gap-6">
-                  {/* NFT Preview Card */}
-                  <div className="md:w-48 flex-shrink-0 mx-auto md:mx-0">
-                    <div
-                      className={`aspect-square rounded-xl bg-gradient-to-br ${game.color} flex items-center justify-center relative border-2 border-white/10 shadow-lg`}
-                    >
-                      <span className="text-6xl drop-shadow-lg">
-                        {game.emoji}
-                      </span>
-                      <div className="absolute bottom-3 left-3 right-3 bg-black/50 backdrop-blur-md rounded-lg px-3 py-2 text-center">
-                        <div className="text-xs text-slate-400 uppercase tracking-wider">
-                          Score
-                        </div>
-                        <div className="text-lg font-bold text-white">
-                          {lastScore.toLocaleString()}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Mint Section */}
-                  <div className="flex-1 min-w-0">
-                    {mintStatus === "success" && mintResult ? (
-                      <>
-                        <h3 className="text-xl font-bold text-slate-50 mb-2">
-                          🏆 Score Minted!
-                        </h3>
-                        <p className="text-slate-400 text-sm mb-4">
-                          Your achievement is now immortalized on-chain as a
-                          unique NFT.
-                        </p>
-
-                        {mintResult.nftId && (
-                          <div className="bg-[#111a2e] rounded-xl p-3 mb-4">
-                            <div className="text-xs text-slate-500 mb-1">
-                              NFT Object ID
-                            </div>
-                            <div className="text-xs text-slate-300 font-mono break-all">
-                              {mintResult.nftId}
-                            </div>
-                          </div>
-                        )}
-
-                        <a
-                          href={`https://onescan.cc/testnet/transactionBlocksDetail?digest=${mintResult.digest}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block w-full px-4 py-3 bg-[#111a2e] border border-cyan-400/20 text-cyan-400 rounded-xl text-sm font-medium text-center hover:bg-cyan-400/5 transition-colors mb-3"
-                        >
-                          ↗ View on Explorer
-                        </a>
-                      </>
-                    ) : (
-                      <>
-                        <h3 className="text-xl font-bold text-slate-50 mb-2">
-                          Mint Your Score Badge
-                        </h3>
-                        <p className="text-slate-400 text-sm mb-5">
-                          Immortalize this achievement on-chain as a unique NFT.
-                          Prove your skills forever.
-                        </p>
-
-                        {/* Score details */}
-                        <div className="space-y-3 mb-5">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-slate-500">Game</span>
-                            <span className="text-slate-200 font-medium">
-                              {game.name}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-slate-500">Score</span>
-                            <span className="text-slate-200 font-bold">
-                              {lastScore.toLocaleString()}
-                            </span>
-                          </div>
-                          {gameStore && gameStore.mintFee > 0 && (
-                            <div className="flex justify-between text-sm">
-                              <span className="text-slate-500">Mint Fee</span>
-                              <span className="text-slate-200">
-                                {(gameStore.mintFee / 1_000_000_000).toFixed(2)}{" "}
-                                OCT
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Mint status messages */}
-                        {mintStatus === "minting" && (
-                          <div className="flex items-center gap-2 text-sm text-cyan-400 mb-4">
-                            <div className="w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
-                            Sign in wallet to mint...
-                          </div>
-                        )}
-
-                        {mintStatus === "error" && (
-                          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 mb-4 text-sm text-red-400">
-                            ❌ {mintError}
-                          </div>
-                        )}
-
-                        {/* Mint button */}
-                        {account?.address ? (
-                          <button
-                            onClick={handleMint}
-                            disabled={
-                              isTxPending || mintStatus === "minting"
-                            }
-                            className="w-full px-5 py-3.5 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            ✨ Mint NFT Badge
-                          </button>
-                        ) : (
-                          <div className="text-xs text-amber-400 bg-amber-500/10 px-4 py-3 rounded-xl border border-amber-400/20 text-center">
-                            Connect wallet to mint your score
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer actions */}
-              <div className="px-6 md:px-8 pb-6 flex gap-3">
-                <button
-                  onClick={handleClosePopup}
-                  className="flex-1 px-4 py-3 bg-[#111a2e] border border-slate-700/30 text-slate-300 rounded-xl font-medium text-sm hover:bg-[#0f1628] transition-colors"
-                >
-                  {mintStatus === "success" ? "Close" : "Play Again"}
-                </button>
-                {mintStatus !== "success" && (
-                  <Link
-                    href="/games"
-                    className="px-4 py-3 bg-[#111a2e] border border-slate-700/30 text-slate-400 rounded-xl font-medium text-sm hover:bg-[#0f1628] transition-colors text-center"
+              {/* ── LEFT: NFT Image ── */}
+              <div className="relative w-full md:w-[280px] flex-shrink-0">
+                {/* Glow behind */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${game.color} blur-2xl opacity-40`} />
+                {game.image ? (
+                  <img
+                    src={game.image}
+                    alt={game.name}
+                    className="relative w-full h-full object-cover"
+                    style={{ minHeight: "380px" }}
+                  />
+                ) : (
+                  <div
+                    className={`relative w-full h-full bg-gradient-to-br ${game.color} flex items-center justify-center`}
+                    style={{ minHeight: "380px" }}
                   >
-                    Other Games
-                  </Link>
+                    <span className="text-8xl drop-shadow-2xl">{game.emoji}</span>
+                  </div>
                 )}
+                {/* Score overlay at bottom */}
+                <div className="absolute bottom-0 left-0 right-0 px-5 pb-5 pt-16 bg-gradient-to-t from-black/95 via-black/60 to-transparent">
+                  <p className="text-white/40 text-[10px] tracking-[3px] uppercase mb-0.5">Final Score</p>
+                  <p
+                    className="text-5xl font-black leading-none"
+                    style={{
+                      background: "linear-gradient(135deg, #00d4ff, #00ffaa)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                    }}
+                  >
+                    {lastScore.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {/* ── RIGHT: Panel ── */}
+              <div className="flex-1 bg-[#0d1322] flex flex-col p-7 gap-5">
+                {/* Title */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#22d3ee]" />
+                    <span className="text-cyan-400 text-[10px] tracking-[3px] uppercase font-bold">
+                      {mintStatus === "success" ? "Minted" : "Immortalize This"}
+                    </span>
+                  </div>
+                  <h2 className="text-white text-2xl font-black leading-tight mb-1">
+                    {mintStatus === "success" ? "🏆 Score Minted!" : "Mint Your Score Badge"}
+                  </h2>
+                  <p className="text-white/35 text-[12px] leading-relaxed">
+                    {mintStatus === "success"
+                      ? "Your achievement is now immortalized on-chain."
+                      : "Unique NFT. Proved on-chain. No two alike."}
+                  </p>
+                </div>
+
+                {/* Stats */}
+                <div className="space-y-0 border border-white/[0.06] rounded-2xl overflow-hidden">
+                  {[
+                    { label: "Game", value: game.name },
+                    { label: "Score", value: lastScore.toLocaleString() },
+                    { label: "Network", value: "OneChain" },
+                    ...(gameStore && gameStore.mintFee > 0
+                      ? [{ label: "Mint Fee", value: `${(gameStore.mintFee / 1_000_000_000).toFixed(2)} OCT` }]
+                      : []),
+                  ].map(({ label, value }, i, arr) => (
+                    <div
+                      key={label}
+                      className={`flex items-center justify-between px-4 py-3 ${i < arr.length - 1 ? "border-b border-white/[0.06]" : ""}`}
+                    >
+                      <span className="text-white/35 text-[11px] tracking-[2px] uppercase">{label}</span>
+                      <span className="text-white text-[12px] font-bold">{value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Success details */}
+                {mintStatus === "success" && mintResult && (
+                  <div className="space-y-2">
+                    {mintResult.nftId && (
+                      <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3">
+                        <div className="text-[10px] text-white/30 uppercase tracking-[2px] mb-1">NFT Object ID</div>
+                        <div className="text-[11px] text-white/70 font-mono break-all">{mintResult.nftId}</div>
+                      </div>
+                    )}
+                    <a
+                      href={`https://onescan.cc/testnet/transactionBlocksDetail?digest=${mintResult.digest}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full py-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.07] text-cyan-400 text-[11px] font-bold tracking-[1px] uppercase text-center transition-all"
+                    >
+                      ↗ View on Explorer
+                    </a>
+                  </div>
+                )}
+
+                {/* Error */}
+                {mintStatus === "error" && (
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-[12px] text-red-400">
+                    ❌ {mintError}
+                  </div>
+                )}
+
+                {/* Mint button (only when not yet minted) */}
+                {mintStatus !== "success" && (
+                  <>
+                    {account?.address ? (
+                      <button
+                        onClick={handleMint}
+                        disabled={isTxPending || mintStatus === "minting"}
+                        className="w-full relative overflow-hidden rounded-xl py-3.5 text-[12px] font-black tracking-[2px] uppercase transition-all duration-300 disabled:opacity-70"
+                        style={{
+                          background: "linear-gradient(135deg, #00d4ff, #00ffaa)",
+                          color: "#000",
+                          boxShadow: "0 0 24px rgba(0,212,255,0.3)",
+                        }}
+                      >
+                        {mintStatus === "minting" ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                            </svg>
+                            Minting…
+                          </span>
+                        ) : (
+                          "✦ Mint NFT Badge"
+                        )}
+                      </button>
+                    ) : (
+                      <div className="text-[11px] text-amber-400 bg-amber-500/10 px-4 py-3 rounded-xl border border-amber-400/20 text-center tracking-[1px] uppercase font-bold">
+                        Connect wallet to mint
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Secondary buttons */}
+                <div className="flex gap-2 mt-auto">
+                  <button
+                    onClick={handleClosePopup}
+                    className="flex-1 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.07] text-white/50 hover:text-white text-[11px] font-bold tracking-[1px] uppercase transition-all"
+                  >
+                    {mintStatus === "success" ? "Close" : "Play Again"}
+                  </button>
+                  {mintStatus !== "success" && (
+                    <Link
+                      href="/games"
+                      className="flex-1 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.07] text-white/50 hover:text-white text-[11px] font-bold tracking-[1px] uppercase transition-all text-center"
+                    >
+                      Other Games
+                    </Link>
+                  )}
+                </div>
               </div>
             </div>
           </div>

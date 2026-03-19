@@ -1,5 +1,6 @@
 import dynamic from "next/dynamic";
 import { ComponentType } from "react";
+import { GAME_IMAGES } from "./images";
 
 export interface GameProps {
   onGameOver: (score: number) => void;
@@ -12,6 +13,7 @@ export interface GameMeta {
   emoji: string;
   color: string;
   description: string;
+  image?: string;
   component: () => Promise<{ default: ComponentType<GameProps> }>;
 }
 
@@ -22,6 +24,7 @@ export const GAMES: Record<string, GameMeta> = {
     emoji: "🔺",
     color: "from-pink-500 to-fuchsia-600",
     description: "Geometry Dash inspired — jump, dodge spikes, reach the finish!",
+    image: GAME_IMAGES["poly-dash"],
     component: () => import("./poly-dash/PolyDashGame"),
   },
   tetris: {
@@ -30,6 +33,7 @@ export const GAMES: Record<string, GameMeta> = {
     emoji: "🧱",
     color: "from-cyan-500 to-blue-600",
     description: "Stack blocks, clear lines, chase the high score",
+    image: GAME_IMAGES["tetris"],
     component: () => import("./tetris/TetrisGame"),
   },
   "space-invaders": {
@@ -38,6 +42,7 @@ export const GAMES: Record<string, GameMeta> = {
     emoji: "👾",
     color: "from-green-400 to-emerald-600",
     description: "Defend Earth from alien waves, defeat bosses, collect power-ups",
+    image: GAME_IMAGES["space-invaders"],
     component: () => import("./space-invaders/SpaceInvadersGame"),
   },
   snake: {
@@ -46,6 +51,7 @@ export const GAMES: Record<string, GameMeta> = {
     emoji: "🐍",
     color: "from-lime-400 to-green-600",
     description: "Collect power-ups, dodge obstacles, chain combos for max score",
+    image: GAME_IMAGES["snake"],
     component: () => import("./snake/SnakeGame"),
   },
   "2048": {
@@ -54,6 +60,7 @@ export const GAMES: Record<string, GameMeta> = {
     emoji: "🔢",
     color: "from-amber-400 to-orange-600",
     description: "Slide tiles, merge numbers, reach the legendary 2048 tile",
+    image: GAME_IMAGES["2048"],
     component: () => import("./2048/Game2048"),
   },
   "bubble-pop": {
@@ -62,6 +69,7 @@ export const GAMES: Record<string, GameMeta> = {
     emoji: "🫧",
     color: "from-pink-400 to-rose-600",
     description: "Pop falling bubbles before they hit the ground — how many can you get?",
+    image: GAME_IMAGES["bubble-pop"],
     component: () => import("./bubble-pop/BubblePopGame"),
   },
   "doodle-jump": {
@@ -70,6 +78,7 @@ export const GAMES: Record<string, GameMeta> = {
     emoji: "🐸",
     color: "from-green-400 to-lime-500",
     description: "Jump higher, stomp monsters, grab jetpacks — don't fall!",
+    image: GAME_IMAGES["doodle-jump"],
     component: () => import("./doodle-jump/DoodleJumpGame"),
   },
   "tower-bloxx": {
@@ -78,6 +87,7 @@ export const GAMES: Record<string, GameMeta> = {
     emoji: "🏗️",
     color: "from-indigo-400 to-violet-600",
     description: "Stack blocks from a swinging crane — build the tallest tower!",
+    image: GAME_IMAGES["tower-bloxx"],
     component: () => import("./tower-bloxx/TowerBloxx"),
   },
 };

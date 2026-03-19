@@ -8,12 +8,8 @@ import {
   useSuiClient,
 } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
-import {
-  PACKAGE_ID,
-  CASINO_MODULE,
-  HOUSE_BANKROLL_ID,
-  COIN_TYPE,
-} from "@/config";
+import { PACKAGE_ID, CASINO_MODULE, HOUSE_BANKROLL_ID, COIN_TYPE } from "@/config";
+import { GAME_IMAGES } from "@/game-store/images";
 import { useCasinoStore } from "@/hooks/useCasinoStore";
 
 // ─── Constants ──────────────────────────────────────────────
@@ -380,7 +376,12 @@ export default function ColorPredictionPage() {
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#00d4c8", display: "inline-block" }} />
               <span style={{ fontSize: 12, color: "#7a8fb0", fontWeight: 500 }}>Instant Play · Weighted RNG</span>
             </div>
-            <h1 style={{ fontSize: 30, fontWeight: 800, color: "#fff", letterSpacing: -0.5, margin: 0 }}>🎨 Color Prediction</h1>
+            <h1 style={{ fontSize: 30, fontWeight: 800, color: "#fff", letterSpacing: -0.5, margin: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
+              {GAME_IMAGES["color-prediction"] ? (
+                <img src={GAME_IMAGES["color-prediction"]} alt="" style={{ height: 30, width: 30, objectFit: "contain" }} />
+              ) : "🎨"}
+              <span>Color Prediction</span>
+            </h1>
             <p style={{ fontSize: 13, color: "#7a8fb0", marginTop: 6 }}>
               Pick a color. Red &amp; Green pay {getColorMul("red", houseEdgeBps).mul.toFixed(2)}×, Violet pays {getColorMul("violet", houseEdgeBps).mul.toFixed(2)}×.
             </p>

@@ -316,7 +316,7 @@ export default function MarketplacePage() {
 
         {/* Listing Grid */}
         {!loading && filtered.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {filtered.map((listing) => {
               const meta = GAMES[listing.gameId];
               const gradient = meta?.color || "from-slate-500 to-slate-600";
@@ -333,54 +333,53 @@ export default function MarketplacePage() {
                   className="bg-[#1a2540] rounded-xl border border-slate-700/20 overflow-hidden hover:border-cyan-400/20 hover:shadow-xl hover:shadow-cyan-900/10 transition-all duration-300 group"
                 >
                   <div
-                    className={`h-28 bg-gradient-to-br ${gradient} flex items-center justify-center relative`}
+                    className={`h-48 bg-gradient-to-br ${gradient} flex flex-col items-center justify-center relative overflow-hidden`}
                   >
-                    <span className="text-4xl drop-shadow-lg group-hover:scale-110 transition-transform">
-                      {emoji}
-                    </span>
-                    <div className="absolute top-3 right-3 bg-black/30 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-bold text-white border border-white/10">
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a2540] via-transparent to-[#1a2540]/20 opacity-90 z-0" />
+                    {meta?.image ? (
+                      <img 
+                        src={meta.image} 
+                        alt={listing.gameName} 
+                        className="w-full h-full object-cover object-top filter drop-shadow-2xl relative z-10 group-hover:scale-110 transition-transform duration-300" 
+                      />
+                    ) : (
+                      <span className="text-4xl drop-shadow-lg group-hover:scale-110 transition-transform relative z-10">
+                        {emoji}
+                      </span>
+                    )}
+                    <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-md px-2 py-0.5 rounded-full text-[9px] font-bold text-white border border-white/20 z-10 shadow-lg">
                       #{listing.mintNumber}
                     </div>
                     {isSeller && (
-                      <div className="absolute top-3 left-3 bg-amber-500/80 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-bold text-black">
-                        Your Listing
+                      <div className="absolute top-2 left-2 bg-amber-500/90 backdrop-blur-md px-2 py-0.5 rounded-full text-[9px] font-bold text-black z-10 shadow-lg">
+                        Yours
                       </div>
                     )}
                   </div>
 
-                  <div className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-base font-bold text-slate-50">
+                  <div className="p-2.5">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <h3 className="text-xs font-bold text-slate-50 truncate mr-1">
                         {listing.gameName}
                       </h3>
-                      <span className="text-xs text-slate-500 bg-[#111a2e] px-2 py-0.5 rounded">
-                        {listing.gameId}
+                      <span className="text-base font-bold text-transparent bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text shrink-0">
+                        {listing.score.toLocaleString()}
                       </span>
                     </div>
 
-                    <div className="bg-[#111a2e] rounded-xl p-2.5 mb-2 text-center">
-                      <div className="text-xs text-slate-500 uppercase tracking-wider mb-0.5">
-                        Score
-                      </div>
-                      <div className="text-xl font-bold text-transparent bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text">
-                        {listing.score.toLocaleString()}
-                      </div>
-                    </div>
-
-                    <div className="bg-emerald-500/8 border border-emerald-400/15 rounded-xl p-2.5 mb-3 text-center">
-                      <div className="text-xs text-emerald-400/60 uppercase tracking-wider mb-0.5">
+                    <div className="bg-emerald-500/5 border border-emerald-400/10 rounded-lg p-1.5 mb-2 text-center">
+                      <div className="text-[9px] text-emerald-400/60 uppercase tracking-wider mb-0.5">
                         Price
                       </div>
-                      <div className="text-lg font-bold text-emerald-400">
+                      <div className="text-sm font-bold text-emerald-400">
                         {formatOCT(listing.price)} OCT
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs mb-3">
+                    <div className="flex items-center justify-between text-[9px] mb-2">
                       <span className="text-slate-600">Seller</span>
                       <span className="text-slate-400 font-mono">
-                        {listing.seller.slice(0, 8)}...
-                        {listing.seller.slice(-4)}
+                        {listing.seller.slice(0, 4)}...{listing.seller.slice(-4)}
                       </span>
                     </div>
 
@@ -392,30 +391,30 @@ export default function MarketplacePage() {
                       <button
                         onClick={() => handleDelist(listing)}
                         disabled={isTxPending || isDelisting}
-                        className="w-full px-4 py-2.5 bg-red-500/10 hover:bg-red-500/15 border border-red-400/20 text-red-400 rounded-xl font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full px-3 py-2 bg-red-500/10 hover:bg-red-500/15 border border-red-400/20 text-red-400 rounded-lg font-medium text-[11px] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isDelisting ? (
-                          <span className="flex items-center justify-center gap-2">
-                            <span className="w-4 h-4 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin" />
-                            Delisting...
+                          <span className="flex items-center justify-center gap-1.5">
+                            <span className="w-3 h-3 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin" />
+                            Wait...
                           </span>
                         ) : (
-                          "❌ Delist NFT"
+                          "❌ Delist"
                         )}
                       </button>
                     ) : (
                       <button
                         onClick={() => handleBuy(listing)}
                         disabled={isTxPending || isBuying}
-                        className="w-full px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed text-white rounded-xl font-bold text-sm transition-all"
+                        className="w-full px-3 py-2 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed text-white rounded-lg font-bold text-[11px] transition-all"
                       >
                         {isBuying ? (
-                          <span className="flex items-center justify-center gap-2">
-                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            Buying...
+                          <span className="flex items-center justify-center gap-1.5">
+                            <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Wait...
                           </span>
                         ) : (
-                          `💎 Buy for ${formatOCT(listing.price)} OCT`
+                          `💎 ${formatOCT(listing.price)} OCT`
                         )}
                       </button>
                     )}

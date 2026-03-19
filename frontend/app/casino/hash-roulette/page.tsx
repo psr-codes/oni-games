@@ -8,12 +8,8 @@ import {
   useSuiClient,
 } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
-import {
-  PACKAGE_ID,
-  CASINO_MODULE,
-  HOUSE_BANKROLL_ID,
-  COIN_TYPE,
-} from "@/config";
+import { PACKAGE_ID, MODULE, CASINO_MODULE, HOUSE_BANKROLL_ID, COIN_TYPE } from "@/config";
+import { GAME_IMAGES } from "@/game-store/images";
 import { useCasinoStore } from "@/hooks/useCasinoStore";
 
 // ─── Constants ──────────────────────────────────────────────
@@ -400,8 +396,11 @@ export default function HashRoulettePage() {
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#00d4c8", display: "inline-block" }} />
               <span style={{ fontSize: 12, color: "#7a8fb0", fontWeight: 500 }}>Provably Fair · On-chain RNG</span>
             </div>
-            <h1 style={{ fontSize: 30, fontWeight: 800, color: "#fff", letterSpacing: -0.5, margin: 0 }}>
-              🔮 Hash Roulette
+            <h1 style={{ fontSize: 30, fontWeight: 800, color: "#fff", letterSpacing: -0.5, margin: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
+              {GAME_IMAGES["hash-roulette"] ? (
+                <img src={GAME_IMAGES["hash-roulette"]} alt="" style={{ height: 30, width: 30, objectFit: "contain" }} />
+              ) : "🔮"}
+              <span>Hash Roulette</span>
             </h1>
             <p style={{ fontSize: 13, color: "#7a8fb0", marginTop: 6 }}>
               Guess the last hex digit(s) of the hash. Powered by on-chain randomness.

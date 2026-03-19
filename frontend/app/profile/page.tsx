@@ -24,6 +24,8 @@ function truncAddr(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
+type SortMode = "score" | "mint";
+
 export default function ProfilePage() {
   const account = useCurrentAccount();
   const suiClient = useSuiClient();
@@ -31,6 +33,8 @@ export default function ProfilePage() {
   const [balance, setBalance] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [filterGame, setFilterGame] = useState<string>("all");
+  const [sortMode, setSortMode] = useState<SortMode>("score");
 
   const fetchNFTs = useCallback(async () => {
     if (!account?.address) {
@@ -108,20 +112,48 @@ export default function ProfilePage() {
     [nfts],
   );
 
+  // Per-game counts
+  const gameCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    nfts.forEach((n) => {
+      counts[n.gameId] = (counts[n.gameId] || 0) + 1;
+    });
+    return counts;
+  }, [nfts]);
+
+  const gameOptions = useMemo(
+    () => Object.keys(gameCounts).sort(),
+    [gameCounts],
+  );
+
   // Per-game highest scores
   const gameHighScores = useMemo(() => {
-    const map: Record<string, { gameName: string; score: number; gameId: string }> = {};
+    const map: Record<string, { gameName: string; score: number; gameId: string; count: number }> = {};
     for (const nft of nfts) {
       if (!map[nft.gameId] || nft.score > map[nft.gameId].score) {
         map[nft.gameId] = {
           gameName: nft.gameName,
           score: nft.score,
           gameId: nft.gameId,
+          count: gameCounts[nft.gameId] || 0,
         };
       }
     }
     return Object.values(map).sort((a, b) => b.score - a.score);
-  }, [nfts]);
+  }, [nfts, gameCounts]);
+
+  // Filtered + sorted NFTs
+  const displayNfts = useMemo(() => {
+    let list = filterGame === "all"
+      ? [...nfts]
+      : nfts.filter((n) => n.gameId === filterGame);
+    if (sortMode === "score") {
+      list.sort((a, b) => b.score - a.score);
+    } else {
+      list.sort((a, b) => b.mintNumber - a.mintNumber);
+    }
+    return list;
+  }, [nfts, filterGame, sortMode]);
 
   // Not connected
   if (!account?.address) {
@@ -243,7 +275,7 @@ export default function ProfilePage() {
                           {gs.gameName}
                         </div>
                         <div className="text-xs text-slate-500">
-                          Best Score
+                          Best Score · {gs.count} NFT{gs.count !== 1 ? "s" : ""}
                         </div>
                       </div>
                       <div className="text-lg font-bold text-cyan-400">
@@ -259,9 +291,70 @@ export default function ProfilePage() {
 
         {/* Trophy Room */}
         <div>
-          <h2 className="text-lg font-bold text-slate-50 mb-4">
-            🏆 Trophy Room
-          </h2>
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <h2 className="text-lg font-bold text-slate-50">
+              🏆 Trophy Room
+            </h2>
+            {/* Sort */}
+            {nfts.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500">Sort:</span>
+                <button
+                  onClick={() => setSortMode("score")}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                    sortMode === "score"
+                      ? "bg-cyan-400/10 text-cyan-400 border border-cyan-400/20"
+                      : "bg-[#1a2540] text-slate-400 border border-slate-700/20 hover:bg-[#1f2d4d]"
+                  }`}
+                >
+                  By Score
+                </button>
+                <button
+                  onClick={() => setSortMode("mint")}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                    sortMode === "mint"
+                      ? "bg-cyan-400/10 text-cyan-400 border border-cyan-400/20"
+                      : "bg-[#1a2540] text-slate-400 border border-slate-700/20 hover:bg-[#1f2d4d]"
+                  }`}
+                >
+                  By Mint #
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Filter bar */}
+          {gameOptions.length > 0 && (
+            <div className="mb-5 flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-slate-500">Filter:</span>
+              <button
+                onClick={() => setFilterGame("all")}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  filterGame === "all"
+                    ? "bg-cyan-400/10 text-cyan-400 border border-cyan-400/20"
+                    : "bg-[#1a2540] text-slate-400 border border-slate-700/20 hover:bg-[#1f2d4d]"
+                }`}
+              >
+                All ({nfts.length})
+              </button>
+              {gameOptions.map((gameId) => {
+                const meta = GAMES[gameId];
+                return (
+                  <button
+                    key={gameId}
+                    onClick={() => setFilterGame(gameId)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors capitalize ${
+                      filterGame === gameId
+                        ? "bg-cyan-400/10 text-cyan-400 border border-cyan-400/20"
+                        : "bg-[#1a2540] text-slate-400 border border-slate-700/20 hover:bg-[#1f2d4d]"
+                    }`}
+                  >
+                    {meta?.emoji || ""} {meta?.name || gameId} ({gameCounts[gameId]})
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {loading && (
             <div className="flex items-center justify-center py-16">
@@ -291,9 +384,58 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {!loading && nfts.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {nfts.map((nft) => {
+          {/* Filters */}
+          {gameOptions.length > 1 && (
+            <div className="mb-8 flex flex-col sm:flex-row sm:items-center gap-3">
+              <span className="text-sm text-slate-500 whitespace-nowrap">Filter by game:</span>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => setFilterGame("all")}
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                    filterGame === "all"
+                      ? "bg-cyan-500 text-slate-900 shadow-md shadow-cyan-500/20"
+                      : "bg-[#1a2540] text-slate-400 border border-slate-700/50 hover:border-cyan-500/30 hover:text-cyan-400"
+                  }`}
+                >
+                  All Games ({nfts.length})
+                </button>
+                {gameOptions.map((gameId) => {
+                  const gameInfo = GAMES[gameId];
+                  return (
+                    <button
+                      key={gameId}
+                      onClick={() => setFilterGame(gameId)}
+                      className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${
+                        filterGame === gameId
+                          ? "bg-cyan-500 text-slate-900 shadow-md shadow-cyan-500/20"
+                          : "bg-[#1a2540] text-slate-400 border border-slate-700/50 hover:border-cyan-500/30 hover:text-cyan-400"
+                      }`}
+                    >
+                      <span>{gameInfo?.emoji || "🎮"}</span>
+                      <span>{gameInfo?.name || gameId}</span>
+                      <span className="bg-black/20 px-2 py-0.5 rounded-md text-[10px]">
+                        {gameCounts[gameId]}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Filtered empty */}
+          {!loading && nfts.length > 0 && displayNfts.length === 0 && (
+            <div className="text-center py-16">
+              <div className="text-4xl mb-3">🔍</div>
+              <p className="text-slate-400">
+                No trophies found for &quot;{filterGame}&quot;.
+              </p>
+            </div>
+          )}
+
+          {!loading && displayNfts.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {displayNfts.map((nft) => {
                 const meta = GAMES[nft.gameId];
                 const color = meta?.color || "from-slate-500 to-slate-600";
                 const emoji = meta?.emoji || "🏆";
@@ -303,26 +445,35 @@ export default function ProfilePage() {
                     className="bg-[#1a2540] rounded-xl border border-slate-700/20 overflow-hidden hover:border-cyan-400/20 transition-all group"
                   >
                     <div
-                      className={`h-32 bg-gradient-to-br ${color} flex items-center justify-center relative`}
+                      className={`h-48 bg-gradient-to-br ${color} flex flex-col items-center justify-center relative overflow-hidden`}
                     >
-                      <span className="text-4xl drop-shadow-lg group-hover:scale-110 transition-transform">
-                        {emoji}
-                      </span>
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#1a2540] via-transparent to-[#1a2540]/20 opacity-90 z-0" />
+                      {meta?.image ? (
+                        <img 
+                          src={meta.image} 
+                          alt={nft.gameName} 
+                          className="w-full h-full object-cover object-top filter drop-shadow-2xl relative z-10 group-hover:scale-110 transition-transform duration-300" 
+                        />
+                      ) : (
+                        <span className="text-4xl drop-shadow-lg group-hover:scale-110 transition-transform relative z-10">
+                          {emoji}
+                        </span>
+                      )}
                       {/* Mint number badge */}
-                      <div className="absolute top-3 right-3 bg-black/30 backdrop-blur-md px-2 py-0.5 rounded-full text-xs font-bold text-white border border-white/10">
+                      <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-md px-2 py-0.5 rounded-full text-[9px] font-bold text-white border border-white/20 z-10 shadow-lg">
                         #{nft.mintNumber}
                       </div>
                     </div>
-                    <div className="p-4">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="text-sm font-bold text-slate-50">
+                    <div className="p-2.5">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <h3 className="text-xs font-bold text-slate-50 truncate mr-1">
                           {nft.gameName}
                         </h3>
-                        <span className="text-lg font-bold text-cyan-400">
+                        <span className="text-base font-bold text-cyan-400 shrink-0">
                           {nft.score.toLocaleString()}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500">Score Badge</p>
+                      <p className="text-[9px] text-slate-500">Score Badge</p>
                     </div>
                   </div>
                 );
@@ -334,3 +485,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

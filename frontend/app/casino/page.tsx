@@ -4,98 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { useCasinoStore } from "@/hooks/useCasinoStore";
 
-const CASINO_GAMES = [
-  {
-    slug: "coin-flip",
-    name: "Coin Flip",
-    emoji: "🪙",
-    color: "from-amber-400 to-yellow-600",
-    description: "Pick heads or tails. Win 1.96× your bet. Instant on-chain result.",
-    multiplier: "1.96×",
-    type: "Instant Play",
-    live: true,
-  },
-  {
-    slug: "hash-roulette",
-    name: "Hash Roulette",
-    emoji: "🔮",
-    color: "from-violet-500 to-indigo-700",
-    description: "Guess the last hex digit(s) of the hash. Up to 4014× payout.",
-    multiplier: "Up to 4014×",
-    type: "Instant Play",
-    live: true,
-  },
-  {
-    slug: "dice-roll",
-    name: "Dice Roll",
-    emoji: "🎲",
-    color: "from-cyan-400 to-teal-600",
-    description: "Set your threshold. Roll over or under. You control the odds.",
-    multiplier: "Up to 97×",
-    type: "Instant Play",
-    live: true,
-  },
-  {
-    slug: "color-prediction",
-    name: "Color Prediction",
-    emoji: "🎨",
-    color: "from-pink-500 to-purple-700",
-    description: "Pick Red, Green, or Violet. Simple bets, big payouts on Violet.",
-    multiplier: "Up to 9.8×",
-    type: "Instant Play",
-    live: true,
-  },
-  {
-    slug: "roulette",
-    name: "Roulette",
-    emoji: "🎡",
-    color: "from-red-500 to-rose-700",
-    description: "Place your bets on red, black, or a number. Classic casino action.",
-    multiplier: "Up to 36×",
-    type: "Instant Play",
-    live: false,
-  },
-  {
-    slug: "wheel-of-fortune",
-    name: "Wheel of Fortune",
-    emoji: "🎡",
-    color: "from-amber-500 to-orange-600",
-    description: "Spin the wheel. Half the segments bust. Win up to 3× your bet.",
-    multiplier: "Up to 3×",
-    type: "Session",
-    live: true,
-  },
-  {
-    slug: "crash",
-    name: "Crypto Crash",
-    emoji: "📈",
-    color: "from-green-400 to-emerald-600",
-    description: "Watch the multiplier climb. Cash out before it crashes — or lose everything.",
-    multiplier: "∞×",
-    type: "Session",
-    live: true,
-  },
-  {
-    slug: "treasure-hunt",
-    name: "Treasure Hunt",
-    emoji: "💎",
-    color: "from-cyan-500 to-blue-700",
-    description: "Avoid bombs to grow your multiplier. Cash out anytime in this session game.",
-    multiplier: "Up to 50000×",
-    type: "Session",
-    live: true,
-  },
-  {
-    slug: "highlow",
-    name: "High — Low",
-    emoji: "🃏",
-    color: "from-rose-500 to-pink-700",
-    description: "Guess higher or lower. Build a streak. Cash out before you bust.",
-    multiplier: "∞× Streak",
-    type: "Session",
-    live: true,
-  },
-];
+import { CASINO_GAMES } from "@/game-store/casino";
 
 export default function CasinoPage() {
   const { casinoStore } = useCasinoStore();
@@ -186,7 +95,7 @@ export default function CasinoPage() {
         {/* Info Banner */}
         <div className="mb-8 p-4 rounded-xl bg-amber-500/5 border border-amber-500/15 flex items-start gap-3">
           <span className="text-lg">💡</span>
-          <div>
+          <div className="flex-1">
             <div className="text-sm font-medium text-amber-300 mb-1">How it works</div>
             <div className="text-xs text-slate-400 leading-relaxed">
               Casino games use the on-chain <span className="text-slate-200 font-medium">HouseBankroll</span> contract.
@@ -194,6 +103,12 @@ export default function CasinoPage() {
               out instantly — all in a single transaction. No backend, fully trustless.
             </div>
           </div>
+          <Link
+            href="/provably-fair"
+            className="shrink-0 self-center px-3 py-1.5 rounded-lg bg-amber-400/10 border border-amber-400/20 text-amber-400 text-xs font-medium hover:bg-amber-400/20 transition-colors"
+          >
+            Learn More →
+          </Link>
         </div>
 
         {/* Live Games */}
@@ -202,7 +117,7 @@ export default function CasinoPage() {
             <h2 className="text-sm font-bold text-amber-400 uppercase tracking-wider mb-4">
               🟢 Live Now
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
               {liveGames.map((game) => (
                 <Link
                   key={game.slug}
@@ -211,30 +126,39 @@ export default function CasinoPage() {
                 >
                   <div className="bg-[#1a2540] rounded-xl border border-slate-700/20 overflow-hidden hover:border-amber-400/20 hover:shadow-xl hover:shadow-amber-900/10 transition-all duration-300 h-full flex flex-col">
                     <div
-                      className={`h-36 bg-gradient-to-br ${game.color} flex items-center justify-center relative group-hover:scale-[1.02] transition-transform duration-500`}
+                      className={`h-64 bg-gradient-to-br ${game.color} flex flex-col items-center justify-center relative group-hover:scale-[1.02] transition-transform duration-500 overflow-hidden`}
                     >
-                      <span className="text-5xl group-hover:scale-110 transition-transform drop-shadow-lg">
-                        {game.emoji}
-                      </span>
-                      <div className="absolute top-3 right-3 bg-green-500/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-green-400 border border-green-400/20">
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#1a2540] via-transparent to-[#1a2540]/20 opacity-90 z-0" />
+                      {game.image ? (
+                        <img 
+                          src={game.image} 
+                          alt={game.name} 
+                          className="w-full h-full object-cover object-top filter drop-shadow-2xl relative z-10 group-hover:scale-110 transition-transform duration-300" 
+                        />
+                      ) : (
+                        <span className="text-5xl group-hover:scale-110 transition-transform drop-shadow-lg relative z-10">
+                          {game.emoji}
+                        </span>
+                      )}
+                      <div className="absolute top-3 right-3 bg-green-500/20 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-green-400 border border-green-400/20 z-10">
                         ▶ Play
                       </div>
-                      <div className="absolute top-3 left-3 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-xs font-medium text-amber-300 border border-amber-400/20">
+                      <div className="absolute top-3 left-3 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-medium text-amber-300 border border-amber-400/20 z-10">
                         {game.multiplier}
                       </div>
                     </div>
-                    <div className="p-5 flex-1 flex flex-col">
-                      <h3 className="text-lg font-bold text-slate-50 mb-1 group-hover:text-amber-400 transition-colors">
+                    <div className="p-4 flex-1 flex flex-col">
+                      <h3 className="text-base font-bold text-slate-50 mb-0.5 group-hover:text-amber-400 transition-colors">
                         {game.name}
                       </h3>
-                      <p className="text-slate-500 text-sm mb-4">
-                        {game.description}
+                      <p className="text-slate-500 text-[13px] leading-snug mb-3 text-line-clamp-2">
+                        {game.description && game.description.length > 60 ? game.description.slice(0, 60) + '...' : game.description}
                       </p>
-                      <div className="mt-auto pt-3 border-t border-slate-700/20 flex items-center justify-between">
-                        <span className="text-xs text-slate-600 bg-[#111a2e] px-3 py-1 rounded-full border border-slate-700/20">
+                      <div className="mt-auto pt-2 border-t border-slate-700/20 flex items-center justify-between">
+                        <span className="text-[10px] text-slate-600 bg-[#111a2e] px-2 py-0.5 rounded-full border border-slate-700/20">
                           {game.type}
                         </span>
-                        <span className="text-amber-400 text-sm font-medium group-hover:translate-x-1 transition-transform">
+                        <span className="text-amber-400 text-[13px] font-medium group-hover:translate-x-1 transition-transform">
                           Play Now →
                         </span>
                       </div>
@@ -252,30 +176,39 @@ export default function CasinoPage() {
             <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">
               🔜 Coming Soon
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
               {comingSoon.map((game) => (
                 <div
                   key={game.slug}
                   className="bg-[#1a2540]/50 rounded-xl border border-slate-700/15 overflow-hidden opacity-60 h-full flex flex-col"
                 >
                   <div
-                    className={`h-36 bg-gradient-to-br ${game.color} flex items-center justify-center relative opacity-50`}
+                    className={`h-64 bg-gradient-to-br ${game.color} flex flex-col items-center justify-center relative opacity-50 overflow-hidden`}
                   >
-                    <span className="text-5xl drop-shadow-lg">
-                      {game.emoji}
-                    </span>
-                    <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-xs text-slate-300 border border-white/10">
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a2540] via-transparent to-[#1a2540]/20 opacity-90 z-0" />
+                    {game.image ? (
+                      <img 
+                        src={game.image} 
+                        alt={game.name} 
+                        className="w-full h-full object-cover object-top filter drop-shadow-2xl relative z-10" 
+                      />
+                    ) : (
+                      <span className="text-5xl drop-shadow-lg relative z-10">
+                        {game.emoji}
+                      </span>
+                    )}
+                    <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] text-slate-300 border border-white/10 z-10">
                       Coming Soon
                     </div>
-                    <div className="absolute top-3 left-3 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-xs text-slate-400 border border-white/10">
+                    <div className="absolute top-3 left-3 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] text-slate-400 border border-white/10 z-10">
                       {game.multiplier}
                     </div>
                   </div>
-                  <div className="p-5 flex-1 flex flex-col">
-                    <h3 className="text-lg font-bold mb-1 text-slate-400">
+                  <div className="p-4 flex-1 flex flex-col">
+                    <h3 className="text-base font-bold mb-0.5 text-slate-400">
                       {game.name}
                     </h3>
-                    <p className="text-slate-600 text-sm">
+                    <p className="text-slate-600 text-[13px] leading-snug">
                       {game.description}
                     </p>
                   </div>
