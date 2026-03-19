@@ -8,7 +8,7 @@ import {
 } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { useEffect, useState, useCallback } from "react";
-import { PACKAGE_ID, MODULE, GAME_STORE_ID, COIN_TYPE } from "@/config";
+import { PACKAGE_ID, MODULE, GAME_STORE_ID, COIN_TYPE, PREVIOUS_PACKAGE_IDS } from "@/config";
 import { useGameStore } from "@/hooks/useGameStore";
 import { GAMES } from "@/game-store/registry";
 
@@ -57,13 +57,20 @@ export default function MarketplacePage() {
   const fetchListings = useCallback(async () => {
     setLoading(true);
     try {
-      const listedEvents = await suiClient.queryEvents({
-        query: { MoveEventType: `${PACKAGE_ID}::${MODULE}::NFTListed` },
-        order: "descending",
-        limit: 100,
-      });
+      const allPackages = [PACKAGE_ID, ...PREVIOUS_PACKAGE_IDS];
+      const eventQueries = await Promise.all(
+        allPackages.map((pid) =>
+          suiClient.queryEvents({
+            query: { MoveEventType: `${pid}::${MODULE}::NFTListed` },
+            order: "descending",
+            limit: 100,
+          })
+        )
+      );
 
-      const listingIds = listedEvents.data
+      const allListedEvents = eventQueries.flatMap((res) => res.data);
+
+      const listingIds = allListedEvents
         .map((e: any) => e.parsedJson?.listing_id)
         .filter(Boolean) as string[];
 

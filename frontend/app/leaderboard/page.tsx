@@ -2,7 +2,7 @@
 
 import { useSuiClient, useCurrentAccount } from "@mysten/dapp-kit";
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { PACKAGE_ID, MODULE } from "@/config";
+import { PACKAGE_ID, MODULE, PREVIOUS_PACKAGE_IDS } from "@/config";
 import { GAMES } from "@/game-store/registry";
 
 interface LeaderboardEntry {
@@ -60,13 +60,21 @@ export default function LeaderboardPage() {
   const fetchLeaderboard = useCallback(async () => {
     setLoading(true);
     try {
-      const events = await suiClient.queryEvents({
-        query: { MoveEventType: `${PACKAGE_ID}::${MODULE}::ScoreMinted` },
-        order: "descending",
-        limit: 200,
-      });
+      const allPackages = [PACKAGE_ID, ...PREVIOUS_PACKAGE_IDS];
+      
+      const eventQueries = await Promise.all(
+        allPackages.map((pid) =>
+          suiClient.queryEvents({
+            query: { MoveEventType: `${pid}::${MODULE}::ScoreMinted` },
+            order: "descending",
+            limit: 200,
+          })
+        )
+      );
 
-      const parsed: LeaderboardEntry[] = events.data
+      const allEvents = eventQueries.flatMap((res) => res.data);
+
+      const parsed: LeaderboardEntry[] = allEvents
         .map((e: any) => {
           const j = e.parsedJson;
           if (!j) return null;

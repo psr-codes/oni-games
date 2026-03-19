@@ -2,58 +2,66 @@
   "network": "testnet",
   "rpc": "https://rpc-testnet.onelabs.cc:443",
   "explorer": "https://onescan.cc/testnet",
-  "deployedAt": "2026-03-16T23:02:00+05:30",
-  "version": 4,
-  "transactionDigest": "(upgrade tx - play_range_wager)",
+  "deployedAt": "2026-03-16T19:34:32.238Z",
+  "version": 5,
+  "transactionDigest": "GsPCiLijY2u6Uq72fmmTP81AEpFRTTYzrxQPx4jG8bqE",
   "gasCost": {
     "totalSpent": "70011420 MIST (≈ 0.070 OCT)"
   },
-  "packageId": "0x8e9ea1353c18659082cb5d66e26ce7b8599c70fc8e5b6e4adc21b621cf688a2a",
-  "modules": ["game_portal", "casino"],
+  "packageId": "0x9648be59effa27966ee8cc0a531cdefac977bb6444dcf5df96c37304eefa46b3",
+  "modules": [
+    "game_portal",
+    "casino"
+  ],
   "objects": {
     "gameStore": {
-      "objectId": "0x1051e743df0be41da81dc2a93f4ee94ef31ca169eed59ff56caf74432f51baaa",
+      "objectId": "0x01ab2998fc05734282f9fdb99a6d3e083a3c17d0389bb12694f9d585dcae2965",
       "owner": "Shared",
       "type": "game_portal::GameStore",
-      "version": 210395962,
-      "digest": "6Y4XtqBPyyUGWpJrZvSzdTPdgMBsRcxYUxkscAd9t1jK"
+      "version": 210395995,
+      "digest": "9xW2ceSyKF1b7yJB957eoTcHnfNijkSW7iJDce6rtMc5"
     },
     "adminCap": {
-      "objectId": "0x10d97d43b4b4450a761889663d10a628be3097aba8058eb70443dab6fdc37ad6",
+      "objectId": "0x62e15e10b85ec01000f0d23b072f49fa8c23d20edc4f7c3da42983f04015b910",
       "owner": "0x6aab5af269952885e12db557a7e7b3b808476ea3aeb6986ca0fb5b2251d41e17",
       "type": "game_portal::AdminCap",
-      "version": 210395962,
-      "digest": "6hGRCiZb2erVrfDJa3WU7ewy7kP6tx6a7F5Tj5anhYo9"
+      "version": 210395995,
+      "digest": "FJVbGPabex5AEgkUVYAzRwBmsQ4CBBCR6wsS9uPj86hv"
     },
     "houseBankroll": {
-      "objectId": "0xf45716904f701b0f27f67ba81ee622ac010b47b134dca6886a27d42fd51b6ab9",
+      "objectId": "0x2b41b5df76c9885612c8a1b5b022a3b4ae6e81f9719083914b654a2527bed037",
       "owner": "Shared",
       "type": "casino::HouseBankroll",
-      "version": 210395962,
-      "digest": "8o47J41kUPnf17JNmcPtfcJPQhNnTcVkcW1MQHwyqn9E"
+      "version": 210395995,
+      "digest": "494cPoLb28NxsYWFJHY6cFEiZwWUS6ZqpYKckmLqEEKn"
     },
     "casinoAdminCap": {
-      "objectId": "0x7482cf3517c9291f2e144314b48a9f3ac7ca5f59eabd2659b2610ceb035fe430",
+      "objectId": "0x05981e384bdddeed41f200dd451c6c18fcc9373b0eb748d255ca0c811ccfff83",
       "owner": "0x6aab5af269952885e12db557a7e7b3b808476ea3aeb6986ca0fb5b2251d41e17",
       "type": "casino::CasinoAdminCap",
-      "version": 210395962,
-      "digest": "A76sdZAbsyPjLKKDgNtRFxvX31F5VopFcatzdCraNviW"
+      "version": 210395995,
+      "digest": "BJbei5rUAT4hHBD5x6U3mnuijqev6R8dPJFdRkS5EWK9"
     },
     "upgradeCap": {
-      "objectId": "0x542118cc275568b82f7db982ecda403019b34e93bad375059631d5081e570634",
+      "objectId": "0x69bb852c9ed7728ded4d1b8a4c96158f5c8942b9e3145e4dde50cecbdb740f3c",
       "owner": "0x6aab5af269952885e12db557a7e7b3b808476ea3aeb6986ca0fb5b2251d41e17",
       "type": "0x2::package::UpgradeCap",
-      "version": 210395962,
-      "digest": "ADwRydGehG4yua5bpo56CdLN6exgkRqXQhnh6LXNiLwY"
+      "version": 210395995,
+      "digest": "6pEHV6XvGsowMyfwfPRPBLQ1qjamG9GJMPrTXCo8Gq8n"
     }
   },
   "adminAddress": "0x6aab5af269952885e12db557a7e7b3b808476ea3aeb6986ca0fb5b2251d41e17",
   "explorerLinks": {
-    "package": "https://onescan.cc/testnet/object/0x8e9ea1353c18659082cb5d66e26ce7b8599c70fc8e5b6e4adc21b621cf688a2a",
-    "gameStore": "https://onescan.cc/testnet/object/0x1051e743df0be41da81dc2a93f4ee94ef31ca169eed59ff56caf74432f51baaa",
-    "houseBankroll": "https://onescan.cc/testnet/object/0xf45716904f701b0f27f67ba81ee622ac010b47b134dca6886a27d42fd51b6ab9"
+    "package": "https://onescan.cc/testnet/object/0x9648be59effa27966ee8cc0a531cdefac977bb6444dcf5df96c37304eefa46b3",
+    "gameStore": "https://onescan.cc/testnet/object/0x01ab2998fc05734282f9fdb99a6d3e083a3c17d0389bb12694f9d585dcae2965",
+    "houseBankroll": "https://onescan.cc/testnet/object/0x2b41b5df76c9885612c8a1b5b022a3b4ae6e81f9719083914b654a2527bed037"
   },
   "previousDeployments": [
+    {
+      "packageId": "0x8e9ea1353c18659082cb5d66e26ce7b8599c70fc8e5b6e4adc21b621cf688a2a",
+      "transactionDigest": "(upgrade tx - play_range_wager)",
+      "note": "v4 - Option A (ActiveSession)"
+    },
     {
       "packageId": "0x209cd73356acc6c529b627ae4d6e83493a3e2598159afe9948b95c6251c40b52",
       "transactionDigest": "CQP2mxWDuRpu211txnEC7z6DAcKy9qP51e4FpYGBc35f",

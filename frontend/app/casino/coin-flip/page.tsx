@@ -14,13 +14,14 @@ import {
   HOUSE_BANKROLL_ID,
   COIN_TYPE,
 } from "@/config";
+import { useCasinoStore } from "@/hooks/useCasinoStore";
 
 // ─── Constants ──────────────────────────────────────────────
 const SIDES = ["heads", "tails"] as const;
 type Side = (typeof SIDES)[number];
 
 const QUICK_BETS_OCT = [0.01, 0.05, 0.1, 0.5, 1]; // in OCT
-const MULTIPLIER_BPS = 19600; // 1.96x payout
+// MULTIPLIER_BPS is now dynamic based on houseEdgeBps
 const GAME_RANGE = 2;
 const MIST_PER_OCT = 1_000_000_000;
 
@@ -38,6 +39,12 @@ interface FlipResult {
 }
 
 export default function CoinFlipPage() {
+  const { casinoStore } = useCasinoStore();
+  const houseEdgeBps = casinoStore?.houseEdgeBps ?? 200; // default 2%
+  // Fair multiplier is 2.0 -> 20000 BPS
+  const MULTIPLIER_BPS = Math.floor((20000 * (10000 - houseEdgeBps)) / 10000);
+  const displayMultiplier = (MULTIPLIER_BPS / 10000).toFixed(2);
+
   const account = useCurrentAccount();
   const suiClient = useSuiClient();
   const { mutate: signAndExecute, isPending: isTxPending } =
@@ -45,6 +52,7 @@ export default function CoinFlipPage() {
 
   const [balance, setBalance] = useState<number>(0); // in MIST
   const [bet, setBet] = useState<number>(0.01); // in OCT
+  const potentialWinOct = bet * ((MULTIPLIER_BPS / 10000) - 1);
   const [choice, setChoice] = useState<Side | null>(null);
   const [phase, setPhase] = useState<"idle" | "flipping" | "result">("idle");
   const [result, setResult] = useState<FlipResult | null>(null);
@@ -425,7 +433,7 @@ export default function CoinFlipPage() {
               <span
                 style={{ fontSize: 13, color: "#7a8fb0", fontWeight: 500 }}
               >
-                Instant Play · On-chain RNG · 1.96× payout
+                Instant Play · On-chain RNG · {displayMultiplier}× payout
               </span>
             </div>
             <h1
@@ -440,7 +448,7 @@ export default function CoinFlipPage() {
               🪙 Coin Flip
             </h1>
             <p style={{ fontSize: 14, color: "#7a8fb0", marginTop: 6 }}>
-              Pick a side. Call the flip. Win 1.96× your bet.
+              Pick a side. Call the flip. Win {displayMultiplier}× your bet.
             </p>
           </div>
 
@@ -715,10 +723,10 @@ export default function CoinFlipPage() {
             <div style={{ fontSize: 13, color: "#7a8fb0", marginTop: 10 }}>
               Potential win:{" "}
               <span style={{ color: "#00e5a0", fontWeight: 600 }}>
-                +{formatOCT(bet * 0.96)} OCT
+                +{formatOCT(potentialWinOct)} OCT
               </span>
               <span style={{ marginLeft: 8, fontSize: 12, color: "#3a4f70" }}>
-                (1.96×)
+                ({displayMultiplier}×)
               </span>
             </div>
           </div>
@@ -962,7 +970,7 @@ export default function CoinFlipPage() {
               color: "#3a4f70",
             }}
           >
-            House edge 2% · Powered by OneChain on-chain RNG ·{" "}
+            House edge {houseEdgeBps / 100}% · Powered by OneChain on-chain RNG ·{" "}
             <span style={{ color: "#00d4c8" }}>Provably Fair</span>
           </div>
         </div>

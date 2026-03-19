@@ -1,6 +1,8 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
+import { useCasinoStore } from "@/hooks/useCasinoStore";
 
 const CASINO_GAMES = [
   {
@@ -24,6 +26,26 @@ const CASINO_GAMES = [
     live: true,
   },
   {
+    slug: "dice-roll",
+    name: "Dice Roll",
+    emoji: "🎲",
+    color: "from-cyan-400 to-teal-600",
+    description: "Set your threshold. Roll over or under. You control the odds.",
+    multiplier: "Up to 97×",
+    type: "Instant Play",
+    live: true,
+  },
+  {
+    slug: "color-prediction",
+    name: "Color Prediction",
+    emoji: "🎨",
+    color: "from-pink-500 to-purple-700",
+    description: "Pick Red, Green, or Violet. Simple bets, big payouts on Violet.",
+    multiplier: "Up to 9.8×",
+    type: "Instant Play",
+    live: true,
+  },
+  {
     slug: "roulette",
     name: "Roulette",
     emoji: "🎡",
@@ -34,20 +56,114 @@ const CASINO_GAMES = [
     live: false,
   },
   {
+    slug: "wheel-of-fortune",
+    name: "Wheel of Fortune",
+    emoji: "🎡",
+    color: "from-amber-500 to-orange-600",
+    description: "Spin the wheel. Half the segments bust. Win up to 3× your bet.",
+    multiplier: "Up to 3×",
+    type: "Session",
+    live: true,
+  },
+  {
     slug: "crash",
-    name: "Crash",
+    name: "Crypto Crash",
     emoji: "📈",
     color: "from-green-400 to-emerald-600",
-    description: "Watch the multiplier rise. Cash out before it crashes. How far do you dare?",
+    description: "Watch the multiplier climb. Cash out before it crashes — or lose everything.",
     multiplier: "∞×",
     type: "Session",
-    live: false,
+    live: true,
+  },
+  {
+    slug: "treasure-hunt",
+    name: "Treasure Hunt",
+    emoji: "💎",
+    color: "from-cyan-500 to-blue-700",
+    description: "Avoid bombs to grow your multiplier. Cash out anytime in this session game.",
+    multiplier: "Up to 50000×",
+    type: "Session",
+    live: true,
+  },
+  {
+    slug: "highlow",
+    name: "High — Low",
+    emoji: "🃏",
+    color: "from-rose-500 to-pink-700",
+    description: "Guess higher or lower. Build a streak. Cash out before you bust.",
+    multiplier: "∞× Streak",
+    type: "Session",
+    live: true,
   },
 ];
 
 export default function CasinoPage() {
-  const liveGames = CASINO_GAMES.filter((g) => g.live);
-  const comingSoon = CASINO_GAMES.filter((g) => !g.live);
+  const { casinoStore } = useCasinoStore();
+  const houseEdgeBps = casinoStore?.houseEdgeBps ?? 200;
+
+  const dynamicGames = useMemo(() => {
+    const coinFlipBps = Math.floor((20000 * (10000 - houseEdgeBps)) / 10000);
+    const coinFlipMult = (coinFlipBps / 10000).toFixed(2);
+    
+    const hashRouletteBps = Math.floor((40960000 * (10000 - houseEdgeBps)) / 10000);
+    const hashRouletteMult = (hashRouletteBps / 10000).toLocaleString(undefined, { maximumFractionDigits: 0 });
+
+    // Dice Roll: max payout at threshold 2 (over) => 98% win chance is wrong, threshold 99 (over) => 1% chance => ~100x
+    // Fair mul at 1% = 10000/0.01 = 1000000 bps, after edge
+    const diceMaxBps = Math.floor((10000 / 0.01 * (10000 - houseEdgeBps)) / 10000);
+    const diceMaxMult = Math.floor(diceMaxBps / 10000);
+
+    // Color: Violet at 10% = 100000 bps, after edge
+    const violetBps = Math.floor((100000 * (10000 - houseEdgeBps)) / 10000);
+    const violetMult = (violetBps / 10000).toFixed(1);
+    const redBps = Math.floor((22222 * (10000 - houseEdgeBps)) / 10000);
+    const redMult = (redBps / 10000).toFixed(2);
+
+    return CASINO_GAMES.map(g => {
+      if (g.slug === "coin-flip") {
+        return {
+          ...g,
+          description: `Pick heads or tails. Win ${coinFlipMult}× your bet. Instant on-chain result.`,
+          multiplier: `${coinFlipMult}×`,
+        };
+      }
+      if (g.slug === "hash-roulette") {
+        return {
+          ...g,
+          description: `Guess the last hex digit(s) of the hash. Up to ${hashRouletteMult}× payout.`,
+          multiplier: `Up to ${hashRouletteMult}×`,
+        };
+      }
+      if (g.slug === "dice-roll") {
+        return {
+          ...g,
+          description: `Set your threshold. Roll over or under. Up to ${diceMaxMult}× payout.`,
+          multiplier: `Up to ${diceMaxMult}×`,
+        };
+      }
+      if (g.slug === "color-prediction") {
+        return {
+          ...g,
+          description: `Pick Red or Green (${redMult}×) or Violet (${violetMult}×). On-chain instant result.`,
+          multiplier: `Up to ${violetMult}×`,
+        };
+      }
+      if (g.slug === "treasure-hunt") {
+        // At 1 bomb, max safe is 24 tiles. Fair mult ~25x. Edge drops it slightly.
+        // At 6 bombs, max safe is 19 tiles. Fair mult is Choose(25, 19) / Choose(19, 19) = 177,100.
+        // So potential multipliers are astronomical, capped only by bankroll.
+        return {
+          ...g,
+          description: `Avoid bombs to grow your multiplier. Cash out anytime.`,
+          multiplier: `Up to 25× - 150000×`,
+        };
+      }
+      return g;
+    });
+  }, [houseEdgeBps]);
+
+  const liveGames = dynamicGames.filter((g) => g.live);
+  const comingSoon = dynamicGames.filter((g) => !g.live);
 
   return (
     <div className="min-h-screen bg-[#111a2e] py-10">

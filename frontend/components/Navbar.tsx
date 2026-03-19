@@ -34,7 +34,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 group">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-teal-500 flex items-center justify-center text-lg font-black text-white shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40 transition-shadow">
-            鬼
+            楽
           </div>
           <span className="text-lg font-bold text-slate-50 tracking-tight">
             <span className="text-cyan-400">Oni</span>Games

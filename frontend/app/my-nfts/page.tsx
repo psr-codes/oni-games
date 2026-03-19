@@ -8,7 +8,7 @@ import {
 import { Transaction } from "@mysten/sui/transactions";
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { PACKAGE_ID, MODULE, GAME_STORE_ID, COIN_TYPE } from "@/config";
+import { PACKAGE_ID, MODULE, GAME_STORE_ID, COIN_TYPE, PREVIOUS_PACKAGE_IDS } from "@/config";
 import { useGameStore } from "@/hooks/useGameStore";
 import { GAMES } from "@/game-store/registry";
 
@@ -52,10 +52,12 @@ export default function MyNFTsPage() {
     }
     setLoading(true);
     try {
-      const structType = `${PACKAGE_ID}::${MODULE}::ScoreNFT`;
+      const allPackages = [PACKAGE_ID, ...PREVIOUS_PACKAGE_IDS];
+      const structTypes = allPackages.map((pid) => `${pid}::${MODULE}::ScoreNFT`);
+
       const result = await suiClient.getOwnedObjects({
         owner: account.address,
-        filter: { StructType: structType },
+        filter: { MatchAny: structTypes.map((t) => ({ StructType: t })) },
         options: { showContent: true, showDisplay: true },
       });
 

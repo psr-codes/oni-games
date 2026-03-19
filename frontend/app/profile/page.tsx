@@ -6,7 +6,7 @@ import {
 } from "@mysten/dapp-kit";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { PACKAGE_ID, MODULE } from "@/config";
+import { PACKAGE_ID, MODULE, PREVIOUS_PACKAGE_IDS } from "@/config";
 import { GAMES } from "@/game-store/registry";
 
 interface ScoreNFT {
@@ -39,10 +39,12 @@ export default function ProfilePage() {
     }
     setLoading(true);
     try {
-      const structType = `${PACKAGE_ID}::${MODULE}::ScoreNFT`;
+      const allPackages = [PACKAGE_ID, ...PREVIOUS_PACKAGE_IDS];
+      const structTypes = allPackages.map((pid) => `${pid}::${MODULE}::ScoreNFT`);
+      
       const result = await suiClient.getOwnedObjects({
         owner: account.address,
-        filter: { StructType: structType },
+        filter: { MatchAny: structTypes.map((t) => ({ StructType: t })) },
         options: { showContent: true },
       });
 

@@ -88,16 +88,14 @@ public struct HouseBankroll has key {
 
 /// An active game session (escrow) for Category B games.
 /// Created by lock_wager, consumed by resolve_session.
-/// The wager is held inside this object until resolution.
-public struct ActiveSession has key, store {
+/// The wager is immediately deposited into the bankroll, and this receipt proves the bet.
+public struct SessionReceipt has key, store {
     id: UID,
     /// Player who locked the wager
     player: address,
-    /// Game identifier (e.g., "crash", "minesweeper")
+    /// Game identifier (e.g., "crash", "t_hunt")
     game_id: String,
-    /// The escrowed wager coin
-    wager: Coin<OCT>,
-    /// Cached wager amount for easy access
+    /// Cached wager amount for easy access on payout
     wager_amount: u64,
     /// Epoch timestamp (ms) when the session was created
     created_at: u64,
@@ -495,10 +493,10 @@ entry fun play_range_wager(
 // 5. Contract verifies, pays out or sweeps wager
 
 /// Step 1: Lock a wager to start a session-based game.
-/// Creates an ActiveSession object holding the escrowed coin.
-/// The ActiveSession is transferred to the player.
+/// Deposits the wager into the House Bankroll immediately.
+/// Returns a SessionReceipt proving the bet to the player.
 public fun lock_wager(
-    bankroll: &HouseBankroll,
+    bankroll: &mut HouseBankroll,
     wager: Coin<OCT>,
     game_id: String,
     ctx: &mut TxContext,
@@ -513,11 +511,15 @@ public fun lock_wager(
 
     let player = ctx.sender();
 
-    let session = ActiveSession {
+    // IMMEDIATE DEPOSIT into House Bankroll (Pay upfront)
+    balance::join(&mut bankroll.balance, coin::into_balance(wager));
+    bankroll.total_wagers = bankroll.total_wagers + wager_amount;
+    bankroll.total_games = bankroll.total_games + 1;
+
+    let session = SessionReceipt {
         id: object::new(ctx),
         player,
         game_id,
-        wager,
         wager_amount,
         created_at: ctx.epoch_timestamp_ms(),
     };
@@ -532,7 +534,7 @@ public fun lock_wager(
         wager_amount,
     });
 
-    // Transfer session object to the player
+    // Transfer session receipt to the player
     transfer::transfer(session, player);
 
     session_id
@@ -547,7 +549,7 @@ public fun lock_wager(
 /// - multiplier_bps = 25000: Player wins 2.5x their wager.
 public fun resolve_session(
     bankroll: &mut HouseBankroll,
-    session: ActiveSession,
+    session: SessionReceipt,
     multiplier_bps: u64,
     nonce: u64,
     server_signature: vector<u8>,
@@ -560,12 +562,11 @@ public fun resolve_session(
     assert!(!table::contains(&bankroll.used_nonces, nonce), E_NONCE_ALREADY_USED);
     table::add(&mut bankroll.used_nonces, nonce, true);
 
-    // Destructure the session
-    let ActiveSession {
+    // Destructure the session receipt
+    let SessionReceipt {
         id,
         player,
         game_id,
-        wager,
         wager_amount,
         created_at: _,
     } = session;
@@ -594,9 +595,7 @@ public fun resolve_session(
     object::delete(id);
 
     if (multiplier_bps == 0) {
-        // Player lost — sweep wager to house bankroll
-        balance::join(&mut bankroll.balance, coin::into_balance(wager));
-
+        // Player lost — Do nothing! Wager was already added to bankroll in `lock_wager`.
         event::emit(SessionResolved {
             session_id,
             player,
@@ -610,18 +609,14 @@ public fun resolve_session(
         // Player won (or broke even)
         let payout = (wager_amount * multiplier_bps) / MAX_BPS;
 
-        // Check bankroll can cover the net payout (payout - wager, since wager returns to pool first)
-        // First, add the wager to the bankroll
-        balance::join(&mut bankroll.balance, coin::into_balance(wager));
-
-        // Check we have enough to pay out
+        // Wager is already inside `bankroll.balance` from `lock_wager`
         assert!(balance::value(&bankroll.balance) >= payout, E_INSUFFICIENT_BANKROLL);
 
         // Check against max payout limit
         let max_allowed_payout = (balance::value(&bankroll.balance) * bankroll.max_payout_bps) / MAX_BPS;
-        assert!(payout <= max_allowed_payout, E_PAYOUT_EXCEEDS_MAX);
+        assert!(payout <= max_allowed_payout + wager_amount, E_PAYOUT_EXCEEDS_MAX);
 
-        // Pay the player
+        // Pay the player out of Bankroll
         let payout_coin = coin::take(&mut bankroll.balance, payout, ctx);
         transfer::public_transfer(payout_coin, player);
 
@@ -637,10 +632,6 @@ public fun resolve_session(
             won: true,
         });
     };
-
-    // Update lifetime stats
-    bankroll.total_wagers = bankroll.total_wagers + wager_amount;
-    bankroll.total_games = bankroll.total_games + 1;
 }
 
 // ============= View Helper Functions =============
@@ -688,19 +679,19 @@ public fun get_max_payout_bps(bankroll: &HouseBankroll): u64 {
 }
 
 /// Get session info: player, game_id, wager_amount.
-public fun session_player(session: &ActiveSession): address {
+public fun session_player(session: &SessionReceipt): address {
     session.player
 }
 
-public fun session_game_id(session: &ActiveSession): String {
+public fun session_game_id(session: &SessionReceipt): String {
     session.game_id
 }
 
-public fun session_wager_amount(session: &ActiveSession): u64 {
+public fun session_wager_amount(session: &SessionReceipt): u64 {
     session.wager_amount
 }
 
 /// Get session creation timestamp (epoch ms).
-public fun session_created_at(session: &ActiveSession): u64 {
+public fun session_created_at(session: &SessionReceipt): u64 {
     session.created_at
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
   useCurrentAccount,
@@ -14,6 +14,7 @@ import {
   HOUSE_BANKROLL_ID,
   COIN_TYPE,
 } from "@/config";
+import { useCasinoStore } from "@/hooks/useCasinoStore";
 
 // ─── Constants ──────────────────────────────────────────────
 const MIST_PER_OCT = 1_000_000_000;
@@ -38,27 +39,21 @@ interface ModeConfig {
   bg: string;
 }
 
-// Multipliers with ~2% house edge applied:
-// 1 digit: fair=16x, payout=15.68x  →  multiplier_bps = 156800
-// 2 digits: fair=256x, payout=250.88x → multiplier_bps = 2508800
-// 3 digits: fair=4096x, payout=4014.08x → multiplier_bps = 40140800
-const MODES: ModeConfig[] = [
+// Multipliers will be dynamically calculated based on house edge
+const BASE_MODES = [
   {
     digits: 1, label: "1 Digit", sublabel: "Last hex digit",
     odds: "1 in 16", gameRange: 16,
-    multiplierBps: 156800, displayMultiplier: "15.68×",
     color: "#00d4c8", bg: "rgba(0,212,200,.1)",
   },
   {
     digits: 2, label: "2 Digits", sublabel: "Last 2 hex digits",
     odds: "1 in 256", gameRange: 256,
-    multiplierBps: 2508800, displayMultiplier: "250.88×",
     color: "#a78bfa", bg: "rgba(167,139,250,.1)",
   },
   {
     digits: 3, label: "3 Digits", sublabel: "Last 3 hex digits",
     odds: "1 in 4096", gameRange: 4096,
-    multiplierBps: 40140800, displayMultiplier: "4014×",
     color: "#f5c542", bg: "rgba(245,197,66,.1)",
   },
 ];
@@ -82,6 +77,21 @@ interface HistoryEntry {
 }
 
 export default function HashRoulettePage() {
+  const { casinoStore } = useCasinoStore();
+  const houseEdgeBps = casinoStore?.houseEdgeBps ?? 200; // default 2%
+
+  const modes = useMemo<ModeConfig[]>(() => {
+    return BASE_MODES.map((m) => {
+      const fairMultiBps = m.gameRange * 10000;
+      const multiplierBps = Math.floor((fairMultiBps * (10000 - houseEdgeBps)) / 10000);
+      return {
+        ...m,
+        multiplierBps,
+        displayMultiplier: `${(multiplierBps / 10000).toLocaleString(undefined, { maximumFractionDigits: 2 })}×`,
+      };
+    });
+  }, [houseEdgeBps]);
+
   const account = useCurrentAccount();
   const suiClient = useSuiClient();
   const { mutate: signAndExecute, isPending: isTxPending } =
@@ -99,7 +109,7 @@ export default function HashRoulettePage() {
   const [error, setError] = useState("");
   const runId = useRef(0);
 
-  const mode = MODES[modeIdx];
+  const mode = modes[modeIdx];
 
   // ─── Balance ──────────────────────────────────────────────
   const fetchBalance = useCallback(async () => {
@@ -424,7 +434,7 @@ export default function HashRoulettePage() {
           <div style={{ marginBottom: 18 }}>
             <div style={{ fontSize: 11, color: "#7a8fb0", fontWeight: 600, letterSpacing: .8, textTransform: "uppercase", marginBottom: 9 }}>Difficulty</div>
             <div style={{ display: "flex", gap: 10 }}>
-              {MODES.map((m, i) => (
+              {modes.map((m, i) => (
                 <button key={i} className="mode-tab"
                   style={modeIdx === i ? { borderColor: m.color, background: m.bg, color: m.color } : {}}
                   onClick={() => { if (phase === "idle") { setModeIdx(i); setGuess(""); } }}
@@ -528,7 +538,7 @@ export default function HashRoulettePage() {
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, fontSize: 13, color: "#7a8fb0" }}>
               <span>Potential win: <span style={{ color: "#00e5a0", fontWeight: 600 }}>+{formatOCT(potentialWin)} OCT</span></span>
-              <span style={{ fontSize: 11, color: "#3a4f70" }}>{mode.displayMultiplier} · 2% edge</span>
+              <span style={{ fontSize: 11, color: "#3a4f70" }}>{mode.displayMultiplier} · {houseEdgeBps / 100}% edge</span>
             </div>
           </div>
 
@@ -632,7 +642,7 @@ export default function HashRoulettePage() {
 
           {/* Footer */}
           <div style={{ textAlign: "center", marginTop: 24, fontSize: 11, color: "#3a4f70" }}>
-            House edge 2% · Powered by OneChain on-chain RNG ·{" "}
+            House edge {houseEdgeBps / 100}% · Powered by OneChain on-chain RNG ·{" "}
             <a href="https://onescan.cc/testnet/object/0x209cd73356acc6c529b627ae4d6e83493a3e2598159afe9948b95c6251c40b52"
               target="_blank" rel="noopener noreferrer" style={{ color: "#00d4c8", textDecoration: "none" }}>
               Provably Fair
