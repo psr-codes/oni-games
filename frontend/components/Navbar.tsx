@@ -17,12 +17,7 @@ export default function Navbar() {
     { name: "Casino", href: "/casino", icon: "🎰" },
     { name: "Marketplace", href: "/marketplace", icon: "🛒" },
     { name: "Leaderboard", href: "/leaderboard", icon: "🏆" },
-    ...(isConnected
-      ? [
-          { name: "My NFTs", href: "/my-nfts", icon: "🖼️" },
-          { name: "Profile", href: "/profile", icon: "👤" },
-        ]
-      : []),
+    ...(isConnected ? [{ name: "Profile", href: "/profile", icon: "👤" }] : []),
   ];
 
   const isActive = (path: string) => pathname === path;
@@ -32,9 +27,11 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-teal-500 flex items-center justify-center text-lg font-black text-white shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40 transition-shadow">
-            楽
-          </div>
+          <img
+            src="/logo.png"
+            alt="OniGames Logo"
+            className="w-12 h-12 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
+          />
           <span className="text-lg font-bold text-slate-50 tracking-tight">
             <span className="text-cyan-400">Oni</span>Games
           </span>

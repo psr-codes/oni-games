@@ -1,10 +1,22 @@
 "use client";
 
-import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
+import {
+  useCurrentAccount,
+  useSuiClient,
+  useSignAndExecuteTransaction,
+} from "@mysten/dapp-kit";
+import { Transaction } from "@mysten/sui/transactions";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { PACKAGE_ID, MODULE, PREVIOUS_PACKAGE_IDS } from "@/config";
+import {
+  PACKAGE_ID,
+  MODULE,
+  PREVIOUS_PACKAGE_IDS,
+  GAME_STORE_ID,
+  COIN_TYPE,
+} from "@/config";
 import { GAMES } from "@/game-store/registry";
+import { useGameStore } from "@/hooks/useGameStore";
 
 interface ScoreNFT {
   id: string;
@@ -14,11 +26,15 @@ interface ScoreNFT {
   player: string;
   imageUrl: string;
   mintNumber: number;
+  isListed?: boolean;
+  listingId?: string;
+  price?: number;
 }
 
 function truncAddr(addr: string) {
   if (!addr) return "";
-  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+  if (addr.length <= 16) return addr;
+  return `${addr.slice(0, 8)}…${addr.slice(-8)}`;
 }
 
 type SortMode = "score" | "mint";
@@ -32,6 +48,25 @@ export default function ProfilePage() {
   const [copied, setCopied] = useState(false);
   const [filterGame, setFilterGame] = useState<string>("all");
   const [sortMode, setSortMode] = useState<SortMode>("score");
+  const [delistingId, setDelistingId] = useState<string | null>(null);
+
+  const { mutate: signAndExecute, isPending: isTxPending } =
+    useSignAndExecuteTransaction();
+  const { gameStore } = useGameStore();
+  const marketFeePercent = gameStore
+    ? (gameStore.marketFeeBps / 100).toFixed(1)
+    : "...";
+
+  const [sendModal, setSendModal] = useState<ScoreNFT | null>(null);
+  const [listModal, setListModal] = useState<ScoreNFT | null>(null);
+  const [recipientAddress, setRecipientAddress] = useState("");
+  const [listPrice, setListPrice] = useState("");
+  const [txStatus, setTxStatus] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+
+  const clearStatus = () => setTimeout(() => setTxStatus(null), 6000);
 
   const fetchNFTs = useCallback(async () => {
     if (!account?.address) {
@@ -45,30 +80,83 @@ export default function ProfilePage() {
         (pid) => `${pid}::${MODULE}::ScoreNFT`,
       );
 
-      const result = await suiClient.getOwnedObjects({
+      // 1. Fetch owned objects
+      const ownedResult = await suiClient.getOwnedObjects({
         owner: account.address,
         filter: { MatchAny: structTypes.map((t) => ({ StructType: t })) },
         options: { showContent: true },
       });
 
-      const parsed: ScoreNFT[] = result.data
+      const ownedNfts: ScoreNFT[] = ownedResult.data
         .map((obj) => {
           const fields = (obj.data?.content as any)?.fields;
           if (!fields) return null;
           return {
             id: obj.data?.objectId || "",
             gameId: fields.game_id || "",
-            gameName: fields.game_name || "",
+            gameName: fields.game_name || GAMES[fields.game_id]?.name || fields.game_id,
             score: Number(fields.score) || 0,
             player: fields.player || "",
             imageUrl: fields.image_url || "",
             mintNumber: Number(fields.mint_number) || 0,
+            isListed: false,
           };
         })
         .filter(Boolean) as ScoreNFT[];
 
-      parsed.sort((a, b) => b.score - a.score);
-      setNfts(parsed);
+      // 2. Fetch listed items where user is seller
+      const listQueries = await Promise.all(
+        allPackages.map((pid) =>
+          suiClient.queryEvents({
+            query: { MoveEventType: `${pid}::${MODULE}::NFTListed` },
+            order: "descending",
+          })
+        )
+      );
+      const allListedEvents = listQueries.flatMap((res) => res.data);
+      const myListedEvents = allListedEvents.filter(
+        (e: any) => e.parsedJson?.seller?.toLowerCase() === account.address.toLowerCase()
+      );
+
+      const listedListingIds = myListedEvents
+        .map((e: any) => e.parsedJson?.listing_id)
+        .filter(Boolean) as string[];
+
+      let listedNfts: ScoreNFT[] = [];
+      if (listedListingIds.length > 0) {
+        const objects = await suiClient.multiGetObjects({
+          ids: [...new Set(listedListingIds)],
+          options: { showContent: true },
+        });
+
+        listedNfts = objects
+          .map((obj) => {
+            if (!obj.data?.content) return null;
+            const fields = (obj.data.content as any)?.fields;
+            if (!fields) return null;
+            const nftFields = fields.nft?.fields;
+            if (!nftFields) return null;
+
+            return {
+              id: nftFields.id?.id || "",
+              gameId: nftFields.game_id || "",
+              gameName: nftFields.game_name || GAMES[nftFields.game_id]?.name || nftFields.game_id,
+              score: Number(nftFields.score) || 0,
+              player: nftFields.player || "",
+              imageUrl: nftFields.image_url || "",
+              mintNumber: Number(nftFields.mint_number) || 0,
+              isListed: true,
+              listingId: obj.data.objectId,
+              price: Number(fields.price) || 0,
+            };
+          })
+          .filter(Boolean) as ScoreNFT[];
+      }
+
+      // 3. Combine and sort
+      const combined = [...ownedNfts, ...listedNfts];
+      // Sort by score by default as already handled in render/useMemo
+      setNfts(combined);
     } catch (err) {
       console.error("Failed to fetch NFTs:", err);
     } finally {
@@ -98,6 +186,125 @@ export default function ProfilePage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
+  };
+
+  const handleSend = () => {
+    if (!sendModal || !recipientAddress) return;
+    if (!recipientAddress.startsWith("0x") || recipientAddress.length < 10) {
+      setTxStatus({ type: "error", message: "❌ Invalid address format" });
+      clearStatus();
+      return;
+    }
+
+    const tx = new Transaction();
+    tx.transferObjects(
+      [tx.object(sendModal.id)],
+      tx.pure.address(recipientAddress),
+    );
+
+    signAndExecute(
+      { transaction: tx },
+      {
+        onSuccess: async (result) => {
+          await suiClient.waitForTransaction({ digest: result.digest });
+          setTxStatus({
+            type: "success",
+            message: `✅ NFT sent! Tx: ${result.digest.slice(0, 12)}...`,
+          });
+          setSendModal(null);
+          setRecipientAddress("");
+          clearStatus();
+          fetchNFTs();
+        },
+        onError: (err) => {
+          setTxStatus({
+            type: "error",
+            message: `❌ Transfer failed: ${err.message}`,
+          });
+          clearStatus();
+        },
+      },
+    );
+  };
+
+  const handleList = () => {
+    if (!listModal || !listPrice) return;
+    const priceNum = parseFloat(listPrice);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      setTxStatus({
+        type: "error",
+        message: "❌ Price must be greater than 0",
+      });
+      clearStatus();
+      return;
+    }
+
+    const priceInMist = Math.floor(priceNum * 1_000_000_000);
+
+    const tx = new Transaction();
+    tx.moveCall({
+      target: `${PACKAGE_ID}::${MODULE}::list_nft_for_sale`,
+      arguments: [tx.object(listModal.id), tx.pure.u64(priceInMist)],
+    });
+
+    signAndExecute(
+      { transaction: tx },
+      {
+        onSuccess: async (result) => {
+          await suiClient.waitForTransaction({ digest: result.digest });
+          setTxStatus({
+            type: "success",
+            message: `✅ NFT listed for ${listPrice} OCT! Tx: ${result.digest.slice(0, 12)}...`,
+          });
+          setListModal(null);
+          setListPrice("");
+          clearStatus();
+          fetchNFTs();
+        },
+        onError: (err) => {
+          setTxStatus({
+            type: "error",
+            message: `❌ Listing failed: ${err.message}`,
+          });
+          clearStatus();
+        },
+      },
+    );
+  };
+
+  const handleDelist = (listing: ScoreNFT) => {
+    if (!listing.listingId) return;
+    setDelistingId(listing.listingId);
+
+    const tx = new Transaction();
+    tx.moveCall({
+      target: `${PACKAGE_ID}::${MODULE}::delist_nft`,
+      arguments: [tx.object(listing.listingId)],
+    });
+
+    signAndExecute(
+      { transaction: tx },
+      {
+        onSuccess: async (result) => {
+          await suiClient.waitForTransaction({ digest: result.digest });
+          setTxStatus({
+            type: "success",
+            message: `✅ NFT delisted! Returned to your wallet. Tx: ${result.digest.slice(0, 12)}...`,
+          });
+          clearStatus();
+          setDelistingId(null);
+          fetchNFTs();
+        },
+        onError: (err) => {
+          setTxStatus({
+            type: "error",
+            message: `❌ Delisting failed: ${err.message}`,
+          });
+          clearStatus();
+          setDelistingId(null);
+        },
+      },
+    );
   };
 
   // Stats
@@ -358,6 +565,19 @@ export default function ProfilePage() {
             </div>
           )}
 
+          {/* Status Toast */}
+          {txStatus && (
+            <div
+              className={`mb-6 p-4 rounded-xl border text-sm font-medium ${
+                txStatus.type === "success"
+                  ? "bg-green-500/10 border-green-500/20 text-green-400"
+                  : "bg-red-500/10 border-red-500/20 text-red-400"
+              }`}
+            >
+              {txStatus.message}
+            </div>
+          )}
+
           {loading && (
             <div className="flex items-center justify-center py-16">
               <div className="flex items-center gap-3 text-slate-400">
@@ -405,7 +625,7 @@ export default function ProfilePage() {
                 return (
                   <div
                     key={nft.id}
-                    className="bg-[#1a2540] rounded-xl border border-slate-700/20 overflow-hidden hover:border-cyan-400/20 transition-all group"
+                    className="bg-[#1a2540] rounded-xl border border-slate-700/20 overflow-hidden hover:border-cyan-400/20 hover:shadow-xl hover:shadow-cyan-900/10 transition-all duration-300 group"
                   >
                     <div
                       className={`h-48 bg-gradient-to-br ${color} flex flex-col items-center justify-center relative overflow-hidden`}
@@ -426,17 +646,68 @@ export default function ProfilePage() {
                       <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-md px-2 py-0.5 rounded-full text-[9px] font-bold text-white border border-white/20 z-10 shadow-lg">
                         #{nft.mintNumber}
                       </div>
+                      {nft.isListed && (
+                        <div className="absolute top-2 left-2 bg-emerald-500/90 backdrop-blur-md px-2 py-0.5 rounded-full text-[9px] font-bold text-black z-10 shadow-lg border border-emerald-400/20">
+                          LISTED • {(Number(nft.price || 0) / 1_000_000_000).toFixed(2)} OCT
+                        </div>
+                      )}
                     </div>
                     <div className="p-2.5">
-                      <div className="flex items-center justify-between mb-0.5">
+                      <div className="flex items-center justify-between mb-1.5">
                         <h3 className="text-xs font-bold text-slate-50 truncate mr-1">
                           {nft.gameName}
                         </h3>
-                        <span className="text-base font-bold text-cyan-400 shrink-0">
+                        <span className="text-base font-bold text-transparent bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text shrink-0">
                           {nft.score.toLocaleString()}
                         </span>
                       </div>
-                      <p className="text-[9px] text-slate-500">Score Badge</p>
+
+                      <div className="flex items-center justify-between text-[9px] mb-2">
+                        <span className="text-slate-600">Object ID</span>
+                        <a
+                          href={`https://onescan.cc/testnet/objectDetails?address=${nft.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-cyan-400 hover:text-cyan-300 font-mono transition-colors"
+                        >
+                          {nft.id.slice(0, 4)}...{nft.id.slice(-4)}
+                        </a>
+                      </div>
+
+                      <div className="flex gap-1.5 mt-auto">
+                        {nft.isListed ? (
+                          <button
+                            onClick={() => handleDelist(nft)}
+                            disabled={isTxPending || delistingId === nft.listingId}
+                            className="flex-1 px-2 py-1.5 bg-red-500/10 hover:bg-red-500/15 border border-red-400/20 text-red-400 rounded-lg text-[11px] font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase"
+                          >
+                            {delistingId === nft.listingId ? "Waiting..." : "❌ Delist"}
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => {
+                                setSendModal(nft);
+                                setListModal(null);
+                              }}
+                              disabled={isTxPending}
+                              className="flex-1 px-2 py-1.5 bg-blue-500/10 hover:bg-blue-500/15 border border-blue-400/20 text-blue-400 rounded-lg text-[11px] font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              📤 Send
+                            </button>
+                            <button
+                              onClick={() => {
+                                setListModal(nft);
+                                setSendModal(null);
+                              }}
+                              disabled={isTxPending}
+                              className="flex-1 px-2 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-400/20 text-emerald-400 rounded-lg text-[11px] font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              🏷️ List
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -445,6 +716,173 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
+
+      {/* Send Modal */}
+      {sendModal && (
+        <div className="fixed inset-0 bg-[#111a2e]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1a2540] rounded-2xl border border-slate-700/30 max-w-md w-full p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-slate-50">📤 Send NFT</h3>
+              <button
+                onClick={() => {
+                  setSendModal(null);
+                  setRecipientAddress("");
+                }}
+                className="text-slate-500 hover:text-slate-200 transition-colors text-xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="bg-[#111a2e] rounded-xl p-4 mb-6 border border-slate-700/20">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">🏆</span>
+                <div>
+                  <div className="text-slate-50 font-bold">
+                    {sendModal.gameName}
+                  </div>
+                  <div className="text-sm text-slate-400">
+                    Score: {sendModal.score.toLocaleString()} • Mint #
+                    {sendModal.mintNumber}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <label className="block text-sm text-slate-400 mb-2">
+              Recipient Address
+            </label>
+            <input
+              type="text"
+              placeholder="0x..."
+              value={recipientAddress}
+              onChange={(e) => setRecipientAddress(e.target.value)}
+              className="w-full bg-[#111a2e] border border-slate-700/30 rounded-xl px-4 py-3 text-slate-50 placeholder:text-slate-600 focus:outline-none focus:border-cyan-400/40 transition-colors font-mono text-sm mb-6"
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setSendModal(null);
+                  setRecipientAddress("");
+                }}
+                className="flex-1 px-4 py-3 bg-[#111a2e] hover:bg-[#0f1628] text-slate-300 rounded-xl font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSend}
+                disabled={isTxPending || !recipientAddress}
+                className="flex-1 px-4 py-3 bg-blue-500 hover:bg-blue-400 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors"
+              >
+                {isTxPending ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Sending...
+                  </span>
+                ) : (
+                  "Confirm Send"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* List Modal */}
+      {listModal && (
+        <div className="fixed inset-0 bg-[#111a2e]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1a2540] rounded-2xl border border-slate-700/30 max-w-md w-full p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-slate-50">
+                🏷️ List on Marketplace
+              </h3>
+              <button
+                onClick={() => {
+                  setListModal(null);
+                  setListPrice("");
+                }}
+                className="text-slate-500 hover:text-slate-200 transition-colors text-xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="bg-[#111a2e] rounded-xl p-4 mb-6 border border-slate-700/20">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">🏆</span>
+                <div>
+                  <div className="text-slate-50 font-bold">
+                    {listModal.gameName}
+                  </div>
+                  <div className="text-sm text-slate-400">
+                    Score: {listModal.score.toLocaleString()} • Mint #
+                    {listModal.mintNumber}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <label className="block text-sm text-slate-400 mb-2">
+              Price (in OCT)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="e.g. 1.5"
+              value={listPrice}
+              onChange={(e) => setListPrice(e.target.value)}
+              className="w-full bg-[#111a2e] border border-slate-700/30 rounded-xl px-4 py-3 text-slate-50 placeholder:text-slate-600 focus:outline-none focus:border-emerald-400/40 transition-colors mb-2"
+            />
+            {listPrice &&
+              !isNaN(parseFloat(listPrice)) &&
+              parseFloat(listPrice) > 0 && (
+                <p className="text-xs text-slate-500 mb-4">
+                  ≈{" "}
+                  {Math.floor(
+                    parseFloat(listPrice) * 1_000_000_000,
+                  ).toLocaleString()}{" "}
+                  MIST
+                  <span className="text-slate-600 ml-2">
+                    • {marketFeePercent}% marketplace fee on sale
+                  </span>
+                </p>
+              )}
+            {(!listPrice || isNaN(parseFloat(listPrice))) && (
+              <div className="mb-4" />
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setListModal(null);
+                  setListPrice("");
+                }}
+                className="flex-1 px-4 py-3 bg-[#111a2e] hover:bg-[#0f1628] text-slate-300 rounded-xl font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleList}
+                disabled={
+                  isTxPending || !listPrice || parseFloat(listPrice) <= 0
+                }
+                className="flex-1 px-4 py-3 bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors"
+              >
+                {isTxPending ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Listing...
+                  </span>
+                ) : (
+                  "List for Sale"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

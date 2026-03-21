@@ -53,9 +53,11 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-3 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2.5 mb-4 group">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-teal-500 flex items-center justify-center text-sm font-black text-white shadow-lg shadow-cyan-500/20">
-                楽
-              </div>
+              <img
+                src="/logo.png"
+                alt="OniGames Logo"
+                className="w-10 h-10 object-contain"
+              />
               <span className="text-base font-bold text-slate-50 tracking-tight">
                 <span className="text-cyan-400">Oni</span>Games
               </span>

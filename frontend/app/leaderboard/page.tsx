@@ -278,9 +278,7 @@ export default function LeaderboardPage() {
 
                     <span className="text-right">
                       <a
-                        href={`https://onescan.cc/testnet/objectDetails?address=${entry.nftId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href={`/marketplace?nftId=${entry.nftId}&game=${encodeURIComponent(entry.gameId)}&score=${entry.score}&player=${entry.player}&mint=${entry.mintNumber}`}
                         className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
                       >
                         View →
