@@ -35,15 +35,6 @@ const RESOURCE_LINKS = [
   { label: "Contact →", href: "/contact" },
 ];
 
-const GAME_PORTAL_CONTRACT =
-  "0x9648be59effa27966ee8cc0a531cdefac977bb6444dcf5df96c37304eefa46b3";
-const HOUSE_BANKROLL_CONTRACT =
-  "0x2b41b5df76c9885612c8a1b5b022a3b4ae6e81f9719083914b654a2527bed037";
-
-function truncate(addr: string) {
-  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
-}
-
 export default function Footer() {
   return (
     <footer className="bg-[#0d1424] border-t border-slate-700/20 mt-auto">
@@ -179,26 +170,6 @@ export default function Footer() {
               className="text-xs text-slate-500 hover:text-cyan-400 transition-colors"
             >
               OneScan ↗
-            </a>
-            <span className="text-slate-700">·</span>
-            <a
-              href={`https://onescan.cc/testnet/object/${GAME_PORTAL_CONTRACT}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-slate-500 hover:text-cyan-400 transition-colors font-mono"
-              title={`Game Portal Contract: ${GAME_PORTAL_CONTRACT}`}
-            >
-              Game Portal {truncate(GAME_PORTAL_CONTRACT)} ↗
-            </a>
-            <span className="text-slate-700">·</span>
-            <a
-              href={`https://onescan.cc/testnet/object/${HOUSE_BANKROLL_CONTRACT}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-slate-500 hover:text-cyan-400 transition-colors font-mono"
-              title={`House Bankroll Contract: ${HOUSE_BANKROLL_CONTRACT}`}
-            >
-              House Bankroll {truncate(HOUSE_BANKROLL_CONTRACT)} ↗
             </a>
             <span className="text-slate-700">·</span>
             <a

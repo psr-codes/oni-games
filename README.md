@@ -54,8 +54,8 @@ OniGames is proudly built on **OneChain** (Testnet).
 
 ### Smart Contracts (Testnet)
 
-- **Game Portal:** `0x9648be59effa27966ee8cc0a531cdefac977bb6444dcf5df96c37304eefa46b3`
-- **House Bankroll:** `0x2b41b5df76c9885612c8a1b5b022a3b4ae6e81f9719083914b654a2527bed037`
+- **Game Portal:** https://onescan.cc/testnet/objectDetails?address=0x9648be59effa27966ee8cc0a531cdefac977bb6444dcf5df96c37304eefa46b3
+- **House Bankroll:** https://onescan.cc/testnet/objectDetails?address=0x2b41b5df76c9885612c8a1b5b022a3b4ae6e81f9719083914b654a2527bed037
 
 ---
 
