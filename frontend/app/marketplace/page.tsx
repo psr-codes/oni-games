@@ -7,7 +7,7 @@ import {
   ConnectButton,
 } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { PACKAGE_ID, MODULE, GAME_STORE_ID, COIN_TYPE, PREVIOUS_PACKAGE_IDS } from "@/config";
@@ -33,7 +33,7 @@ interface ListingData {
   isListed: boolean;
 }
 
-export default function MarketplacePage() {
+function MarketplaceContent() {
   const account = useCurrentAccount();
   const suiClient = useSuiClient();
   const searchParams = useSearchParams();
@@ -768,5 +768,20 @@ export default function MarketplacePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function MarketplacePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#111a2e] flex items-center justify-center text-cyan-400">
+          <div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+          <span className="ml-3 font-medium">Loading Marketplace...</span>
+        </div>
+      }
+    >
+      <MarketplaceContent />
+    </Suspense>
   );
 }
