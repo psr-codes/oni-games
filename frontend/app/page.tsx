@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { useGameStore } from "@/hooks/useGameStore";
-import { GAMES_LIST } from "@/game-store/registry";
+import { GAMES_LIST, GAMES } from "@/game-store/registry";
 import { CASINO_GAMES } from "@/game-store/casino";
+
+const POPULAR_SLUGS = ["poly-dash", "doodle-jump", "2048", "space-invaders"];
+const TOP_CASINO_SLUGS = ["crash", "dice-roll", "highlow", "hash-roulette"];
 
 export default function Home() {
   const account = useCurrentAccount();
@@ -30,13 +33,14 @@ export default function Home() {
             Play. Score. Mint.
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-400 to-violet-400">
-              Own Your Dominance.
+              Built on OneChain.
             </span>
           </h1>
 
           <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Retro arcade games meet Web3. Every high score becomes an NFT.
-            Compete on immutable leaderboards. Trade your achievements.
+            Retro arcade and provably fair casino games meet Web3. Every high
+            score becomes an NFT. Compete on immutable leaderboards. Trade your
+            achievements.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -137,50 +141,56 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-16">
-          {games.slice(1, 5).map((game) => (
-            <Link
-              key={game.slug}
-              href={`/games/${game.slug}`}
-              className="group"
-            >
-              <div className="bg-[#1a2540] rounded-xl border border-slate-700/20 overflow-hidden hover:border-cyan-400/20 hover:shadow-xl hover:shadow-cyan-900/10 transition-all duration-300 h-full flex flex-col">
-                <div
-                  className={`h-64 bg-gradient-to-br ${game.color} flex flex-col items-center justify-center relative group-hover:scale-[1.02] transition-transform duration-500 overflow-hidden`}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1a2540] via-transparent to-[#1a2540]/20 opacity-90 z-0" />
-                  {game.image ? (
-                    <img 
-                      src={game.image} 
-                      alt={game.name} 
-                      className="w-full h-full object-cover object-top filter drop-shadow-2xl relative z-10 group-hover:scale-110 transition-transform duration-300" 
-                    />
-                  ) : (
-                    <span className="text-5xl group-hover:scale-110 transition-transform drop-shadow-lg relative z-10">
-                      {game.emoji}
-                    </span>
-                  )}
-                  <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-mono text-white/80 border border-white/20 z-10 shadow-lg">
-                    Score NFT
+          {POPULAR_SLUGS.map((slug) => GAMES[slug])
+            .filter(Boolean)
+            .map((game) => (
+              <Link
+                key={game.slug}
+                href={`/games/${game.slug}`}
+                className="group"
+              >
+                <div className="bg-[#1a2540] rounded-xl border border-slate-700/20 overflow-hidden hover:border-cyan-400/20 hover:shadow-xl hover:shadow-cyan-900/10 transition-all duration-300 h-full flex flex-col">
+                  <div
+                    className={`h-64 bg-gradient-to-br ${game.color} flex flex-col items-center justify-center relative group-hover:scale-[1.02] transition-transform duration-500 overflow-hidden`}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a2540] via-transparent to-[#1a2540]/20 opacity-90 z-0" />
+                    {game.image ? (
+                      <img
+                        src={game.image}
+                        alt={game.name}
+                        className="w-full h-full object-cover object-top filter drop-shadow-2xl relative z-10 group-hover:scale-110 transition-transform duration-300"
+                      />
+                    ) : (
+                      <span className="text-5xl group-hover:scale-110 transition-transform drop-shadow-lg relative z-10">
+                        {game.emoji}
+                      </span>
+                    )}
+                    <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-mono text-white/80 border border-white/20 z-10 shadow-lg">
+                      Score NFT
+                    </div>
                   </div>
-                </div>
 
-                <div className="p-4 flex-1 flex flex-col">
-                  <h3 className="text-base font-bold text-slate-50 mb-0.5 group-hover:text-cyan-400 transition-colors">
-                    {game.name}
-                  </h3>
-                  <p className="text-slate-500 text-[13px] leading-snug mb-3">
-                    {game.description && game.description.length > 60 ? game.description.slice(0, 60) + '...' : game.description}
-                  </p>
-                  <div className="mt-auto pt-2 border-t border-slate-700/20 flex items-center justify-between">
-                    <span className="text-[10px] text-slate-600">OneChain</span>
-                    <span className="text-cyan-400 text-[13px] font-medium group-hover:translate-x-1 transition-transform">
-                      Play Now →
-                    </span>
+                  <div className="p-4 flex-1 flex flex-col">
+                    <h3 className="text-base font-bold text-slate-50 mb-0.5 group-hover:text-cyan-400 transition-colors">
+                      {game.name}
+                    </h3>
+                    <p className="text-slate-500 text-[13px] leading-snug mb-3">
+                      {game.description && game.description.length > 60
+                        ? game.description.slice(0, 60) + "..."
+                        : game.description}
+                    </p>
+                    <div className="mt-auto pt-2 border-t border-slate-700/20 flex items-center justify-between">
+                      <span className="text-[10px] text-slate-600">
+                        OneChain
+                      </span>
+                      <span className="text-cyan-400 text-[13px] font-medium group-hover:translate-x-1 transition-transform">
+                        Play Now →
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
         </div>
 
         {/* Casino Row */}
@@ -202,52 +212,58 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {CASINO_GAMES.filter(g => g.live).slice(0, 4).map((game) => (
-            <Link
-              key={game.slug}
-              href={`/casino/${game.slug}`}
-              className="group"
-            >
-              <div className="bg-[#1a2540] rounded-xl border border-slate-700/20 overflow-hidden hover:border-amber-400/20 hover:shadow-xl hover:shadow-amber-900/10 transition-all duration-300 h-full flex flex-col">
-                <div
-                  className={`h-64 bg-gradient-to-br ${game.color} flex flex-col items-center justify-center relative group-hover:scale-[1.02] transition-transform duration-500 overflow-hidden`}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1a2540] via-transparent to-[#1a2540]/20 opacity-90 z-0" />
-                  {game.image ? (
-                    <img 
-                      src={game.image} 
-                      alt={game.name} 
-                      className="w-full h-full object-cover object-top filter drop-shadow-2xl relative z-10 group-hover:scale-110 transition-transform duration-300" 
-                    />
-                  ) : (
-                    <span className="text-5xl group-hover:scale-110 transition-transform drop-shadow-lg relative z-10">
-                      {game.emoji}
-                    </span>
-                  )}
-                  <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-medium text-amber-300 border border-amber-400/20 z-10 shadow-lg">
-                    {game.multiplier}
+          {TOP_CASINO_SLUGS.map(
+            (slug) => CASINO_GAMES.find((g) => g.slug === slug)!,
+          )
+            .filter(Boolean)
+            .map((game) => (
+              <Link
+                key={game.slug}
+                href={`/casino/${game.slug}`}
+                className="group"
+              >
+                <div className="bg-[#1a2540] rounded-xl border border-slate-700/20 overflow-hidden hover:border-amber-400/20 hover:shadow-xl hover:shadow-amber-900/10 transition-all duration-300 h-full flex flex-col">
+                  <div
+                    className={`h-64 bg-gradient-to-br ${game.color} flex flex-col items-center justify-center relative group-hover:scale-[1.02] transition-transform duration-500 overflow-hidden`}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a2540] via-transparent to-[#1a2540]/20 opacity-90 z-0" />
+                    {game.image ? (
+                      <img
+                        src={game.image}
+                        alt={game.name}
+                        className="w-full h-full object-cover object-top filter drop-shadow-2xl relative z-10 group-hover:scale-110 transition-transform duration-300"
+                      />
+                    ) : (
+                      <span className="text-5xl group-hover:scale-110 transition-transform drop-shadow-lg relative z-10">
+                        {game.emoji}
+                      </span>
+                    )}
+                    <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-medium text-amber-300 border border-amber-400/20 z-10 shadow-lg">
+                      {game.multiplier}
+                    </div>
                   </div>
-                </div>
 
-                <div className="p-4 flex-1 flex flex-col">
-                  <h3 className="text-base font-bold text-slate-50 mb-0.5 group-hover:text-amber-400 transition-colors">
-                    {game.name}
-                  </h3>
-                  <p className="text-slate-500 text-[13px] leading-snug mb-3">
-                    {game.description && game.description.length > 60 ? game.description.slice(0, 60) + '...' : game.description}
-                  </p>
-                  <div className="mt-auto pt-2 border-t border-slate-700/20 flex items-center justify-between">
-                    <span className="text-[10px] text-slate-600 bg-[#111a2e] px-2 py-0.5 rounded-full border border-slate-700/20">
-                      {game.type}
-                    </span>
-                    <span className="text-amber-400 text-[13px] font-medium group-hover:translate-x-1 transition-transform">
-                      Play Now →
-                    </span>
+                  <div className="p-4 flex-1 flex flex-col">
+                    <h3 className="text-base font-bold text-slate-50 mb-0.5 group-hover:text-amber-400 transition-colors">
+                      {game.name}
+                    </h3>
+                    <p className="text-slate-500 text-[13px] leading-snug mb-3">
+                      {game.description && game.description.length > 60
+                        ? game.description.slice(0, 60) + "..."
+                        : game.description}
+                    </p>
+                    <div className="mt-auto pt-2 border-t border-slate-700/20 flex items-center justify-between">
+                      <span className="text-[10px] text-slate-600 bg-[#111a2e] px-2 py-0.5 rounded-full border border-slate-700/20">
+                        {game.type}
+                      </span>
+                      <span className="text-amber-400 text-[13px] font-medium group-hover:translate-x-1 transition-transform">
+                        Play Now →
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
         </div>
       </div>
 
@@ -301,34 +317,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="border-t border-slate-700/15 py-8">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2 text-slate-500 text-sm">
-            <span className="text-lg">鬼</span>
-            <span>Oni Games — Built on OneChain</span>
-          </div>
-          <div className="flex gap-6 text-slate-500 text-sm">
-            <a
-              href="https://onescan.cc/testnet"
-              target="_blank"
-              rel="noopener"
-              className="hover:text-cyan-400 transition-colors"
-            >
-              Explorer
-            </a>
-            <a
-              href="https://onechain.org"
-              target="_blank"
-              rel="noopener"
-              className="hover:text-cyan-400 transition-colors"
-            >
-              OneChain
-            </a>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

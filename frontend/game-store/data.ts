@@ -1,0 +1,1 @@
+export const WHITEPAPER_URL="https://docs.google.com/document/d/1Kd4wXG72WtT0QA0aFTY_CHZRu7TiCgqn/edit?usp=sharing&ouid=116479139271503954993&rtpof=true&sd=true";

@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  useCurrentAccount,
-  useSuiClient,
-} from "@mysten/dapp-kit";
+import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { PACKAGE_ID, MODULE, PREVIOUS_PACKAGE_IDS } from "@/config";
@@ -44,8 +41,10 @@ export default function ProfilePage() {
     setLoading(true);
     try {
       const allPackages = [PACKAGE_ID, ...PREVIOUS_PACKAGE_IDS];
-      const structTypes = allPackages.map((pid) => `${pid}::${MODULE}::ScoreNFT`);
-      
+      const structTypes = allPackages.map(
+        (pid) => `${pid}::${MODULE}::ScoreNFT`,
+      );
+
       const result = await suiClient.getOwnedObjects({
         owner: account.address,
         filter: { MatchAny: structTypes.map((t) => ({ StructType: t })) },
@@ -128,7 +127,10 @@ export default function ProfilePage() {
 
   // Per-game highest scores
   const gameHighScores = useMemo(() => {
-    const map: Record<string, { gameName: string; score: number; gameId: string; count: number }> = {};
+    const map: Record<
+      string,
+      { gameName: string; score: number; gameId: string; count: number }
+    > = {};
     for (const nft of nfts) {
       if (!map[nft.gameId] || nft.score > map[nft.gameId].score) {
         map[nft.gameId] = {
@@ -144,9 +146,10 @@ export default function ProfilePage() {
 
   // Filtered + sorted NFTs
   const displayNfts = useMemo(() => {
-    let list = filterGame === "all"
-      ? [...nfts]
-      : nfts.filter((n) => n.gameId === filterGame);
+    let list =
+      filterGame === "all"
+        ? [...nfts]
+        : nfts.filter((n) => n.gameId === filterGame);
     if (sortMode === "score") {
       list.sort((a, b) => b.score - a.score);
     } else {
@@ -292,9 +295,7 @@ export default function ProfilePage() {
         {/* Trophy Room */}
         <div>
           <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-            <h2 className="text-lg font-bold text-slate-50">
-              🏆 Trophy Room
-            </h2>
+            <h2 className="text-lg font-bold text-slate-50">🏆 Trophy Room</h2>
             {/* Sort */}
             {nfts.length > 0 && (
               <div className="flex items-center gap-2">
@@ -349,7 +350,8 @@ export default function ProfilePage() {
                         : "bg-[#1a2540] text-slate-400 border border-slate-700/20 hover:bg-[#1f2d4d]"
                     }`}
                   >
-                    {meta?.emoji || ""} {meta?.name || gameId} ({gameCounts[gameId]})
+                    {meta?.emoji || ""} {meta?.name || gameId} (
+                    {gameCounts[gameId]})
                   </button>
                 );
               })}
@@ -384,45 +386,6 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* Filters */}
-          {gameOptions.length > 1 && (
-            <div className="mb-8 flex flex-col sm:flex-row sm:items-center gap-3">
-              <span className="text-sm text-slate-500 whitespace-nowrap">Filter by game:</span>
-              <div className="flex gap-2 flex-wrap">
-                <button
-                  onClick={() => setFilterGame("all")}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
-                    filterGame === "all"
-                      ? "bg-cyan-500 text-slate-900 shadow-md shadow-cyan-500/20"
-                      : "bg-[#1a2540] text-slate-400 border border-slate-700/50 hover:border-cyan-500/30 hover:text-cyan-400"
-                  }`}
-                >
-                  All Games ({nfts.length})
-                </button>
-                {gameOptions.map((gameId) => {
-                  const gameInfo = GAMES[gameId];
-                  return (
-                    <button
-                      key={gameId}
-                      onClick={() => setFilterGame(gameId)}
-                      className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${
-                        filterGame === gameId
-                          ? "bg-cyan-500 text-slate-900 shadow-md shadow-cyan-500/20"
-                          : "bg-[#1a2540] text-slate-400 border border-slate-700/50 hover:border-cyan-500/30 hover:text-cyan-400"
-                      }`}
-                    >
-                      <span>{gameInfo?.emoji || "🎮"}</span>
-                      <span>{gameInfo?.name || gameId}</span>
-                      <span className="bg-black/20 px-2 py-0.5 rounded-md text-[10px]">
-                        {gameCounts[gameId]}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
           {/* Filtered empty */}
           {!loading && nfts.length > 0 && displayNfts.length === 0 && (
             <div className="text-center py-16">
@@ -449,10 +412,10 @@ export default function ProfilePage() {
                     >
                       <div className="absolute inset-0 bg-gradient-to-t from-[#1a2540] via-transparent to-[#1a2540]/20 opacity-90 z-0" />
                       {meta?.image ? (
-                        <img 
-                          src={meta.image} 
-                          alt={nft.gameName} 
-                          className="w-full h-full object-cover object-top filter drop-shadow-2xl relative z-10 group-hover:scale-110 transition-transform duration-300" 
+                        <img
+                          src={meta.image}
+                          alt={nft.gameName}
+                          className="w-full h-full object-cover object-top filter drop-shadow-2xl relative z-10 group-hover:scale-110 transition-transform duration-300"
                         />
                       ) : (
                         <span className="text-4xl drop-shadow-lg group-hover:scale-110 transition-transform relative z-10">
@@ -485,4 +448,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-

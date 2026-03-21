@@ -13,11 +13,10 @@ export default function Navbar() {
   const account = useCurrentAccount();
 
   const navLinks = [
-    { name: "Home", href: "/", icon: "🏠" },
     { name: "Play", href: "/games", icon: "🎮" },
     { name: "Casino", href: "/casino", icon: "🎰" },
-    { name: "Leaderboard", href: "/leaderboard", icon: "🏆" },
     { name: "Marketplace", href: "/marketplace", icon: "🛒" },
+    { name: "Leaderboard", href: "/leaderboard", icon: "🏆" },
     ...(isConnected
       ? [
           { name: "My NFTs", href: "/my-nfts", icon: "🖼️" },
