@@ -94,7 +94,8 @@ export default function ProfilePage() {
           return {
             id: obj.data?.objectId || "",
             gameId: fields.game_id || "",
-            gameName: fields.game_name || GAMES[fields.game_id]?.name || fields.game_id,
+            gameName:
+              fields.game_name || GAMES[fields.game_id]?.name || fields.game_id,
             score: Number(fields.score) || 0,
             player: fields.player || "",
             imageUrl: fields.image_url || "",
@@ -110,12 +111,13 @@ export default function ProfilePage() {
           suiClient.queryEvents({
             query: { MoveEventType: `${pid}::${MODULE}::NFTListed` },
             order: "descending",
-          })
-        )
+          }),
+        ),
       );
       const allListedEvents = listQueries.flatMap((res) => res.data);
       const myListedEvents = allListedEvents.filter(
-        (e: any) => e.parsedJson?.seller?.toLowerCase() === account.address.toLowerCase()
+        (e: any) =>
+          e.parsedJson?.seller?.toLowerCase() === account.address.toLowerCase(),
       );
 
       const listedListingIds = myListedEvents
@@ -140,7 +142,10 @@ export default function ProfilePage() {
             return {
               id: nftFields.id?.id || "",
               gameId: nftFields.game_id || "",
-              gameName: nftFields.game_name || GAMES[nftFields.game_id]?.name || nftFields.game_id,
+              gameName:
+                nftFields.game_name ||
+                GAMES[nftFields.game_id]?.name ||
+                nftFields.game_id,
               score: Number(nftFields.score) || 0,
               player: nftFields.player || "",
               imageUrl: nftFields.image_url || "",
@@ -648,7 +653,9 @@ export default function ProfilePage() {
                       </div>
                       {nft.isListed && (
                         <div className="absolute top-2 left-2 bg-emerald-500/90 backdrop-blur-md px-2 py-0.5 rounded-full text-[9px] font-bold text-black z-10 shadow-lg border border-emerald-400/20">
-                          LISTED • {(Number(nft.price || 0) / 1_000_000_000).toFixed(2)} OCT
+                          LISTED •{" "}
+                          {(Number(nft.price || 0) / 1_000_000_000).toFixed(2)}{" "}
+                          OCT
                         </div>
                       )}
                     </div>
@@ -678,10 +685,14 @@ export default function ProfilePage() {
                         {nft.isListed ? (
                           <button
                             onClick={() => handleDelist(nft)}
-                            disabled={isTxPending || delistingId === nft.listingId}
+                            disabled={
+                              isTxPending || delistingId === nft.listingId
+                            }
                             className="flex-1 px-2 py-1.5 bg-red-500/10 hover:bg-red-500/15 border border-red-400/20 text-red-400 rounded-lg text-[11px] font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase"
                           >
-                            {delistingId === nft.listingId ? "Waiting..." : "❌ Delist"}
+                            {delistingId === nft.listingId
+                              ? "Waiting..."
+                              : "❌ Delist"}
                           </button>
                         ) : (
                           <>

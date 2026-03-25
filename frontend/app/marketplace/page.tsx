@@ -10,7 +10,13 @@ import { Transaction } from "@mysten/sui/transactions";
 import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { PACKAGE_ID, MODULE, GAME_STORE_ID, COIN_TYPE, PREVIOUS_PACKAGE_IDS } from "@/config";
+import {
+  PACKAGE_ID,
+  MODULE,
+  GAME_STORE_ID,
+  COIN_TYPE,
+  PREVIOUS_PACKAGE_IDS,
+} from "@/config";
 import { useGameStore } from "@/hooks/useGameStore";
 import { GAMES } from "@/game-store/registry";
 
@@ -63,7 +69,9 @@ function MarketplaceContent() {
   const [buyingId, setBuyingId] = useState<string | null>(null);
   const [delistingId, setDelistingId] = useState<string | null>(null);
   const [filterGame, setFilterGame] = useState<string>("all");
-  const [listStatus, setListStatus] = useState<"all" | "listed" | "unlisted">("all");
+  const [listStatus, setListStatus] = useState<"all" | "listed" | "unlisted">(
+    "all",
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [showMine, setShowMine] = useState(false);
 
@@ -80,7 +88,7 @@ function MarketplaceContent() {
     setLoading(true);
     try {
       const allPackages = [PACKAGE_ID, ...PREVIOUS_PACKAGE_IDS];
-      
+
       // 1. Fetch all mint events to get all NFTs
       const mintQueries = await Promise.all(
         allPackages.map((pid) =>
@@ -88,8 +96,8 @@ function MarketplaceContent() {
             query: { MoveEventType: `${pid}::${MODULE}::ScoreMinted` },
             order: "descending",
             limit: 200,
-          })
-        )
+          }),
+        ),
       );
       const allMintEvents = mintQueries.flatMap((res) => res.data);
 
@@ -118,8 +126,8 @@ function MarketplaceContent() {
           suiClient.queryEvents({
             query: { MoveEventType: `${pid}::${MODULE}::NFTPurchased` },
             order: "ascending",
-          })
-        )
+          }),
+        ),
       );
       const allPurchaseEvents = purchaseQueries.flatMap((res) => res.data);
       allPurchaseEvents.forEach((e: any) => {
@@ -139,8 +147,8 @@ function MarketplaceContent() {
             query: { MoveEventType: `${pid}::${MODULE}::NFTListed` },
             order: "descending",
             limit: 100,
-          })
-        )
+          }),
+        ),
       );
 
       const allListedEvents = listQueries.flatMap((res) => res.data);
@@ -183,10 +191,16 @@ function MarketplaceContent() {
               nftId,
               listingId: lData.listingId,
               gameId: nftFields.game_id || "",
-              gameName: nftFields.game_name || GAMES[nftFields.game_id]?.name || nftFields.game_id,
+              gameName:
+                nftFields.game_name ||
+                GAMES[nftFields.game_id]?.name ||
+                nftFields.game_id,
               score: Number(nftFields.score) || 0,
               player: nftFields.player || "",
-              imageUrl: typeof nftFields.image_url === "string" ? nftFields.image_url : "",
+              imageUrl:
+                typeof nftFields.image_url === "string"
+                  ? nftFields.image_url
+                  : "",
               mintNumber: Number(nftFields.mint_number) || 0,
               isListed: true,
               price: lData.price,
@@ -307,7 +321,8 @@ function MarketplaceContent() {
     if (listStatus === "unlisted" && l.isListed) return false;
     if (showMine && account?.address) {
       const addr = account.address.toLowerCase();
-      if (l.player.toLowerCase() !== addr && l.seller.toLowerCase() !== addr) return false;
+      if (l.player.toLowerCase() !== addr && l.seller.toLowerCase() !== addr)
+        return false;
     }
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
@@ -337,22 +352,34 @@ function MarketplaceContent() {
               Buy, sell, and trade Score NFTs from top players.
             </p>
           </div>
-          
+
           <div className="flex items-center gap-3 bg-[#1a2540] px-3 py-2 border border-slate-700/20 rounded-lg shrink-0 w-full md:w-auto overflow-x-auto">
-             <div className="text-center px-1.5">
-                 <div className="text-lg font-bold text-slate-50">{listings.length}</div>
-                 <div className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Minted</div>
-             </div>
-             <div className="w-px h-8 bg-slate-700/50" />
-             <div className="text-center px-1.5">
-                 <div className="text-lg font-bold text-cyan-400">{listings.filter(l => l.isListed).length}</div>
-                 <div className="text-[9px] text-cyan-500/50 uppercase tracking-wider font-semibold">Listed</div>
-             </div>
-             <div className="w-px h-8 bg-slate-700/50" />
-             <div className="text-center px-1.5">
-                 <div className="text-lg font-bold text-purple-400">{gameOptions.length}</div>
-                 <div className="text-[9px] text-purple-500/50 uppercase tracking-wider font-semibold">Games</div>
-             </div>
+            <div className="text-center px-1.5">
+              <div className="text-lg font-bold text-slate-50">
+                {listings.length}
+              </div>
+              <div className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">
+                Minted
+              </div>
+            </div>
+            <div className="w-px h-8 bg-slate-700/50" />
+            <div className="text-center px-1.5">
+              <div className="text-lg font-bold text-cyan-400">
+                {listings.filter((l) => l.isListed).length}
+              </div>
+              <div className="text-[9px] text-cyan-500/50 uppercase tracking-wider font-semibold">
+                Listed
+              </div>
+            </div>
+            <div className="w-px h-8 bg-slate-700/50" />
+            <div className="text-center px-1.5">
+              <div className="text-lg font-bold text-purple-400">
+                {gameOptions.length}
+              </div>
+              <div className="text-[9px] text-purple-500/50 uppercase tracking-wider font-semibold">
+                Games
+              </div>
+            </div>
           </div>
         </div>
 
@@ -372,7 +399,9 @@ function MarketplaceContent() {
         {/* Search Bar */}
         <div className="mb-5 flex items-center gap-2">
           <div className="flex-1 relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">🔍</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
+              🔍
+            </span>
             <input
               type="text"
               value={searchQuery}
@@ -408,7 +437,9 @@ function MarketplaceContent() {
           <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
             {gameOptions.length > 1 && (
               <>
-                <span className="text-sm text-slate-500 shrink-0">Filter by game:</span>
+                <span className="text-sm text-slate-500 shrink-0">
+                  Filter by game:
+                </span>
                 <div className="flex gap-2 shrink-0">
                   <button
                     onClick={() => setFilterGame("all")}
@@ -440,21 +471,27 @@ function MarketplaceContent() {
               </>
             )}
           </div>
-          
+
           {/* Status Filter */}
           <div className="flex bg-[#1a2540] p-1 rounded-xl border border-slate-700/20 shrink-0 w-full md:w-auto">
             <button
-               onClick={() => setListStatus("all")}
-               className={`flex-1 md:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${listStatus === "all" ? "bg-cyan-500/20 text-cyan-400" : "text-slate-400 hover:text-slate-200"}`}
-            >All</button>
+              onClick={() => setListStatus("all")}
+              className={`flex-1 md:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${listStatus === "all" ? "bg-cyan-500/20 text-cyan-400" : "text-slate-400 hover:text-slate-200"}`}
+            >
+              All
+            </button>
             <button
-               onClick={() => setListStatus("listed")}
-               className={`flex-1 md:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${listStatus === "listed" ? "bg-cyan-500/20 text-cyan-400" : "text-slate-400 hover:text-slate-200"}`}
-            >Listed</button>
+              onClick={() => setListStatus("listed")}
+              className={`flex-1 md:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${listStatus === "listed" ? "bg-cyan-500/20 text-cyan-400" : "text-slate-400 hover:text-slate-200"}`}
+            >
+              Listed
+            </button>
             <button
-               onClick={() => setListStatus("unlisted")}
-               className={`flex-1 md:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${listStatus === "unlisted" ? "bg-cyan-500/20 text-cyan-400" : "text-slate-400 hover:text-slate-200"}`}
-            >Not Listed</button>
+              onClick={() => setListStatus("unlisted")}
+              className={`flex-1 md:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${listStatus === "unlisted" ? "bg-cyan-500/20 text-cyan-400" : "text-slate-400 hover:text-slate-200"}`}
+            >
+              Not Listed
+            </button>
           </div>
         </div>
 
@@ -476,8 +513,8 @@ function MarketplaceContent() {
               No Listings Yet
             </h3>
             <p className="text-slate-500 mb-6 max-w-md mx-auto">
-              No NFTs are currently listed for sale. Mint a Score NFT and list it
-              from your{" "}
+              No NFTs are currently listed for sale. Mint a Score NFT and list
+              it from your{" "}
               <a href="/my-nfts" className="text-cyan-400 hover:underline">
                 My NFTs
               </a>{" "}
@@ -504,26 +541,38 @@ function MarketplaceContent() {
             </h3>
             {(() => {
               const meta = GAMES[highlightNft.game || ""];
-              const listed = listings.find((l) => l.nftId === highlightNft.nftId && l.isListed);
-              const isHighlightMine = account?.address && (
-                highlightNft.player?.toLowerCase() === account.address.toLowerCase() ||
-                listed?.seller.toLowerCase() === account.address.toLowerCase()
+              const listed = listings.find(
+                (l) => l.nftId === highlightNft.nftId && l.isListed,
               );
-              
+              const isHighlightMine =
+                account?.address &&
+                (highlightNft.player?.toLowerCase() ===
+                  account.address.toLowerCase() ||
+                  listed?.seller.toLowerCase() ===
+                    account.address.toLowerCase());
+
               return (
                 <div className="bg-[#1a2540] rounded-2xl border border-cyan-400/20 hover:border-cyan-400/40 transition-colors overflow-hidden shadow-lg shadow-cyan-900/10">
                   <div className="flex flex-col sm:flex-row h-full">
                     {/* BIG Image Left */}
                     <div className="sm:w-60 bg-slate-900/50 relative overflow-hidden flex items-stretch border-b sm:border-b-0 sm:border-r border-slate-700/30">
                       <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-purple-500/5 pointer-events-none" />
-                      <div className={`w-full bg-gradient-to-br ${
-                        meta?.color || "from-slate-500 to-slate-600"
-                      } flex items-center justify-center text-6xl relative overflow-hidden group`}>
+                      <div
+                        className={`w-full bg-gradient-to-br ${
+                          meta?.color || "from-slate-500 to-slate-600"
+                        } flex items-center justify-center text-6xl relative overflow-hidden group`}
+                      >
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-0 opacity-80" />
                         {meta?.image ? (
-                            <img src={meta.image} alt={highlightNft.game || ""} className="w-full h-full object-contain z-10 relative group-hover:scale-105 transition-transform duration-500" />
+                          <img
+                            src={meta.image}
+                            alt={highlightNft.game || ""}
+                            className="w-full h-full object-contain z-10 relative group-hover:scale-105 transition-transform duration-500"
+                          />
                         ) : (
-                            <span className="z-10 drop-shadow-lg group-hover:scale-110 transition-transform duration-500">{meta?.emoji || "🏆"}</span>
+                          <span className="z-10 drop-shadow-lg group-hover:scale-110 transition-transform duration-500">
+                            {meta?.emoji || "🏆"}
+                          </span>
                         )}
                         {isHighlightMine && (
                           <div className="absolute top-2 right-2 bg-amber-500/90 backdrop-blur-md px-2 py-0.5 rounded-full text-[9px] font-bold text-black z-20 shadow-lg">
@@ -531,7 +580,7 @@ function MarketplaceContent() {
                           </div>
                         )}
                         <div className="absolute bottom-2 left-2 z-20 text-xs font-bold text-white px-2.5 py-1 bg-black/60 backdrop-blur-md rounded-md border border-white/20">
-                           #{highlightNft.mint}
+                          #{highlightNft.mint}
                         </div>
                       </div>
                     </div>
@@ -539,74 +588,112 @@ function MarketplaceContent() {
                     {/* Details Right */}
                     <div className="flex-1 p-6 md:p-8 flex flex-col justify-center relative">
                       <div className="flex items-baseline justify-between gap-4 mb-6">
-                         <span className="text-3xl font-black text-slate-50 tracking-tight">
-                           {meta?.name || highlightNft.game}
-                         </span>
-                         <span className="text-3xl font-black text-transparent bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text shrink-0">
-                           {Number(highlightNft.score || 0).toLocaleString()} PTS
-                         </span>
+                        <span className="text-3xl font-black text-slate-50 tracking-tight">
+                          {meta?.name || highlightNft.game}
+                        </span>
+                        <span className="text-3xl font-black text-transparent bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text shrink-0">
+                          {Number(highlightNft.score || 0).toLocaleString()} PTS
+                        </span>
                       </div>
 
                       <div className="grid grid-cols-2 gap-x-8 gap-y-6 mb-8">
-                         <div>
-                           <div className="text-[10px] text-slate-500 mb-1.5 uppercase tracking-widest font-bold">Owner</div>
-                           <a href={`https://onescan.cc/testnet/objectDetails?address=${highlightNft.player}`} target="_blank" rel="noopener noreferrer" className="text-cyan-400 font-mono text-sm hover:text-cyan-300 transition-colors">
-                             {truncAddr(highlightNft.player || "")} ↗
-                           </a>
-                         </div>
-                         <div>
-                           <div className="text-[10px] text-slate-500 mb-1.5 uppercase tracking-widest font-bold">NFT ID</div>
-                           <a href={`https://onescan.cc/testnet/objectDetails?address=${highlightNft.nftId}`} target="_blank" rel="noopener noreferrer" className="text-slate-300 font-mono text-sm hover:text-cyan-400 transition-colors">
-                             {truncAddr(highlightNft.nftId || "")} ↗
-                           </a>
-                         </div>
+                        <div>
+                          <div className="text-[10px] text-slate-500 mb-1.5 uppercase tracking-widest font-bold">
+                            Owner
+                          </div>
+                          <a
+                            href={`https://onescan.cc/testnet/objectDetails?address=${highlightNft.player}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-cyan-400 font-mono text-sm hover:text-cyan-300 transition-colors"
+                          >
+                            {truncAddr(highlightNft.player || "")} ↗
+                          </a>
+                        </div>
+                        <div>
+                          <div className="text-[10px] text-slate-500 mb-1.5 uppercase tracking-widest font-bold">
+                            NFT ID
+                          </div>
+                          <a
+                            href={`https://onescan.cc/testnet/objectDetails?address=${highlightNft.nftId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-slate-300 font-mono text-sm hover:text-cyan-400 transition-colors"
+                          >
+                            {truncAddr(highlightNft.nftId || "")} ↗
+                          </a>
+                        </div>
                       </div>
 
                       {listed ? (
-                         <div className="flex items-center gap-6 mt-auto pt-6 border-t border-slate-700/50">
-                            <div className="flex flex-col">
-                               <span className="text-[10px] text-emerald-400/70 uppercase tracking-widest font-bold mb-1">Price</span>
-                               <span className="text-2xl font-black text-emerald-400">{formatOCT(listed.price)} OCT</span>
-                            </div>
-                            <div className="h-10 w-px bg-slate-700/50 hidden sm:block" />
-                            <div className="flex flex-col justify-center hidden sm:flex">
-                               <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Seller</span>
-                               <a href={`https://onescan.cc/testnet/objectDetails?address=${listed.seller}`} target="_blank" rel="noopener noreferrer" className="text-cyan-400 font-mono text-sm hover:text-cyan-300 transition-colors">
-                                 {truncAddr(listed.seller)} ↗
-                               </a>
-                            </div>
-                            <div className="ml-auto">
-                              {!account?.address ? (
-                                <ConnectButton />
-                              ) : (account.address.toLowerCase() === listed.seller.toLowerCase()) ? (
-                                <button
-                                  onClick={() => handleDelist(listed)}
-                                  disabled={isTxPending || delistingId === listed.listingId}
-                                  className="px-6 py-2.5 bg-red-500/10 hover:bg-red-500/15 border border-red-400/20 text-red-400 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  {delistingId === listed.listingId ? "Wait..." : "❌ Delist"}
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => handleBuy(listed)}
-                                  disabled={isTxPending || buyingId === listed.listingId}
-                                  className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-900/20"
-                                >
-                                  {buyingId === listed.listingId ? "Wait..." : "💎 Buy Now"}
-                                </button>
-                              )}
-                            </div>
-                         </div>
-                      ) : (
-                         <div className="mt-auto pt-6 border-t border-slate-700/50 flex items-center justify-between">
-                            <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-900/80 text-slate-400 text-xs font-bold rounded-lg border border-slate-700/50">
-                               <span className="w-2 h-2 rounded-full bg-slate-600" />
-                               Not Listed
+                        <div className="flex items-center gap-6 mt-auto pt-6 border-t border-slate-700/50">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] text-emerald-400/70 uppercase tracking-widest font-bold mb-1">
+                              Price
                             </span>
-                            <button disabled className="px-6 py-2.5 bg-slate-800 text-slate-600 rounded-xl font-bold cursor-not-allowed border border-slate-700/50">
-                               Not Listed
-                            </button>
-                         </div>
+                            <span className="text-2xl font-black text-emerald-400">
+                              {formatOCT(listed.price)} OCT
+                            </span>
+                          </div>
+                          <div className="h-10 w-px bg-slate-700/50 hidden sm:block" />
+                          <div className="flex flex-col justify-center hidden sm:flex">
+                            <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">
+                              Seller
+                            </span>
+                            <a
+                              href={`https://onescan.cc/testnet/objectDetails?address=${listed.seller}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-cyan-400 font-mono text-sm hover:text-cyan-300 transition-colors"
+                            >
+                              {truncAddr(listed.seller)} ↗
+                            </a>
+                          </div>
+                          <div className="ml-auto">
+                            {!account?.address ? (
+                              <ConnectButton />
+                            ) : account.address.toLowerCase() ===
+                              listed.seller.toLowerCase() ? (
+                              <button
+                                onClick={() => handleDelist(listed)}
+                                disabled={
+                                  isTxPending ||
+                                  delistingId === listed.listingId
+                                }
+                                className="px-6 py-2.5 bg-red-500/10 hover:bg-red-500/15 border border-red-400/20 text-red-400 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {delistingId === listed.listingId
+                                  ? "Wait..."
+                                  : "❌ Delist"}
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleBuy(listed)}
+                                disabled={
+                                  isTxPending || buyingId === listed.listingId
+                                }
+                                className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-900/20"
+                              >
+                                {buyingId === listed.listingId
+                                  ? "Wait..."
+                                  : "💎 Buy Now"}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-auto pt-6 border-t border-slate-700/50 flex items-center justify-between">
+                          <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-900/80 text-slate-400 text-xs font-bold rounded-lg border border-slate-700/50">
+                            <span className="w-2 h-2 rounded-full bg-slate-600" />
+                            Not Listed
+                          </span>
+                          <button
+                            disabled
+                            className="px-6 py-2.5 bg-slate-800 text-slate-600 rounded-xl font-bold cursor-not-allowed border border-slate-700/50"
+                          >
+                            Not Listed
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -625,8 +712,10 @@ function MarketplaceContent() {
               const emoji = meta?.emoji || "🏆";
               const isMine =
                 account?.address &&
-                (listing.seller.toLowerCase() === account.address.toLowerCase() ||
-                 listing.player.toLowerCase() === account.address.toLowerCase());
+                (listing.seller.toLowerCase() ===
+                  account.address.toLowerCase() ||
+                  listing.player.toLowerCase() ===
+                    account.address.toLowerCase());
               const isBuying = buyingId === listing.listingId;
               const isDelisting = delistingId === listing.listingId;
 
@@ -640,10 +729,10 @@ function MarketplaceContent() {
                   >
                     <div className="absolute inset-0 bg-gradient-to-t from-[#1a2540] via-transparent to-[#1a2540]/20 opacity-90 z-0" />
                     {meta?.image ? (
-                      <img 
-                        src={meta.image} 
-                        alt={listing.gameName} 
-                        className="w-full h-full object-cover object-top filter drop-shadow-2xl relative z-10 group-hover:scale-110 transition-transform duration-300" 
+                      <img
+                        src={meta.image}
+                        alt={listing.gameName}
+                        className="w-full h-full object-cover object-top filter drop-shadow-2xl relative z-10 group-hover:scale-110 transition-transform duration-300"
                       />
                     ) : (
                       <span className="text-4xl drop-shadow-lg group-hover:scale-110 transition-transform relative z-10">
@@ -671,29 +760,36 @@ function MarketplaceContent() {
                     </div>
 
                     {listing.isListed ? (
-                       <div className="bg-emerald-500/5 border border-emerald-400/10 rounded-lg p-2 mb-3 text-center">
-                         <div className="text-[10px] text-emerald-400/60 uppercase tracking-wider mb-0.5 font-semibold">
-                           Price
-                         </div>
-                         <div className="text-sm font-bold text-emerald-400">
-                           {formatOCT(listing.price)} OCT
-                         </div>
-                       </div>
+                      <div className="bg-emerald-500/5 border border-emerald-400/10 rounded-lg p-2 mb-3 text-center">
+                        <div className="text-[10px] text-emerald-400/60 uppercase tracking-wider mb-0.5 font-semibold">
+                          Price
+                        </div>
+                        <div className="text-sm font-bold text-emerald-400">
+                          {formatOCT(listing.price)} OCT
+                        </div>
+                      </div>
                     ) : (
-                       <div className="bg-[#1a2540] border border-slate-700/50 rounded-lg p-2 mb-3 text-center h-[54px] flex flex-col items-center justify-center">
-                         <div className="text-xs font-semibold text-slate-500">Not Listed</div>
-                       </div>
+                      <div className="bg-[#1a2540] border border-slate-700/50 rounded-lg p-2 mb-3 text-center h-[54px] flex flex-col items-center justify-center">
+                        <div className="text-xs font-semibold text-slate-500">
+                          Not Listed
+                        </div>
+                      </div>
                     )}
 
                     <div className="flex items-center justify-between text-[10px] mb-3 mt-auto">
-                      <span className="text-slate-500 font-semibold uppercase tracking-wider">{listing.isListed ? 'Seller' : 'Owner'}</span>
+                      <span className="text-slate-500 font-semibold uppercase tracking-wider">
+                        {listing.isListed ? "Seller" : "Owner"}
+                      </span>
                       <a
-                        href={`https://onescan.cc/testnet/objectDetails?address=${listing.isListed ? listing.seller : listing.player}`}
+                        href={`https://onescan.cc/testnet/account?address=${listing.isListed ? listing.seller : listing.player}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-cyan-400 hover:text-cyan-300 font-mono transition-colors"
                       >
-                        {truncAddr(listing.isListed ? listing.seller : listing.player)} ↗
+                        {truncAddr(
+                          listing.isListed ? listing.seller : listing.player,
+                        )}{" "}
+                        ↗
                       </a>
                     </div>
 
@@ -721,10 +817,10 @@ function MarketplaceContent() {
                       )
                     ) : (
                       <button
-                         disabled
-                         className="w-full px-3 py-2 bg-slate-800 text-slate-500 rounded-lg font-bold text-xs cursor-not-allowed border border-slate-700/50"
+                        disabled
+                        className="w-full px-3 py-2 bg-slate-800 text-slate-500 rounded-lg font-bold text-xs cursor-not-allowed border border-slate-700/50"
                       >
-                         Not Listed
+                        Not Listed
                       </button>
                     )}
                   </div>

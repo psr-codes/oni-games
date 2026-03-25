@@ -1,5 +1,6 @@
 "use client";
 
+import { WHITEPAPER_URL } from "@/game-store/data";
 import { useState, useEffect, useRef } from "react";
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
@@ -697,7 +698,7 @@ export default function ProvablyFairPage() {
               How to Verify ↓
             </a>
             <a
-              href="https://docs.google.com/document/d/1Kd4wXG72WtT0QA0aFTY_CHZRu7TiCgqn/edit?usp=sharing&ouid=116479139271503954993&rtpof=true&sd=true"
+              href={WHITEPAPER_URL}
               target="_blank"
               rel="noreferrer"
               style={{
