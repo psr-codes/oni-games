@@ -5,7 +5,7 @@
 ---
 
 ## 📌 Official Links (OneHack 3.0 Submission)
-
+-  **All Submission Links:** [Submission](https://docs.google.com/document/d/1yXdyKMtJdixWQgIHKQ_67tgD4hdPjgEy2OvkeyLZTnA/edit?usp=sharing)
 - 🎥 **YouTube Demo Video:** [Watch on YouTube](https://www.youtube.com/watch?v=PcVaTP3d7yg)
 - 🌐 **Deployed Site (Fully Functional):** [www.onichan.fun](https://www.onichan.fun)
 - 💻 **GitHub (Contracts & UI Code):** [psr-codes/oni-games](https://github.com/psr-codes/oni-games)
