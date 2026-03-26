@@ -2,6 +2,19 @@
 
 **OniGames** is a decentralized arcade and casino platform built on the **OneChain** network. Play retro-style minigames, compete for high scores, mint your best runs as exclusive NFTs, and trade them on our on-chain marketplace. Feeling lucky? Try out our provably fair casino games!
 
+---
+
+## 📌 Official Links (OneHack 3.0 Submission)
+
+- 🎥 **YouTube Demo Video:** [Watch on YouTube](https://www.youtube.com/watch?v=PcVaTP3d7yg)
+- 🌐 **Deployed Site (Fully Functional):** [www.onichan.fun](https://www.onichan.fun)
+- 💻 **GitHub (Contracts & UI Code):** [psr-codes/oni-games](https://github.com/psr-codes/oni-games)
+- 📜 **Smart Contracts (Arcade & Casino):** [View on OneScan](https://onescan.cc/testnet/packageDetail?packageId=0x9648be59effa27966ee8cc0a531cdefac977bb6444dcf5df96c37304eefa46b3) *(Both modules deployed under this single Package ID)*
+- 📄 **Project Whitepaper:** [Read Whitepaper](https://docs.google.com/document/d/1Kd4wXG72WtT0QA0aFTY_CHZRu7TiCgqn/edit?usp=share_link&ouid=116479139271503954993&rtpof=true&sd=true)
+- 📊 **Pitch Deck (PPT):** [View Presentation](https://docs.google.com/document/d/1Kd4wXG72WtT0QA0aFTY_CHZRu7TiCgqn/edit?usp=share_link&ouid=116479139271503954993&rtpof=true&sd=true)
+
+---
+
 ## 🌟 Features
 
 ### 🎮 Arcade Games
