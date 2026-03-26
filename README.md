@@ -15,6 +15,11 @@
 
 ---
 
+### 🎥 Watch the Demo
+[![OniGames Demo Video](https://img.youtube.com/vi/PcVaTP3d7yg/maxresdefault.jpg)](https://www.youtube.com/watch?v=PcVaTP3d7yg)
+
+---
+
 ## 🌟 Features
 
 ### 🎮 Arcade Games
@@ -70,8 +75,8 @@ OniGames is proudly built on **OneChain** (Testnet).
 
 ### Smart Contracts (Testnet)
 
-- **Game Portal:** https://onescan.cc/testnet/objectDetails?address=0x9648be59effa27966ee8cc0a531cdefac977bb6444dcf5df96c37304eefa46b3
-- **House Bankroll:** https://onescan.cc/testnet/objectDetails?address=0x2b41b5df76c9885612c8a1b5b022a3b4ae6e81f9719083914b654a2527bed037
+- **Game Portal:** [https://onescan.cc/testnet/objectDetails?address=0x9648be59effa27966ee8cc0a531cdefac977bb6444dcf5df96c37304eefa46b3](https://onescan.cc/testnet/packageDetail?packageId=0x9648be59effa27966ee8cc0a531cdefac977bb6444dcf5df96c37304eefa46b3)
+- **House Bankroll:** [https://onescan.cc/testnet/objectDetails?address=0x9648be59effa27966ee8cc0a531cdefac977bb6444dcf5df96c37304eefa46b3](https://onescan.cc/testnet/packageDetail?packageId=0x9648be59effa27966ee8cc0a531cdefac977bb6444dcf5df96c37304eefa46b3)
 
 ---
 
@@ -88,7 +93,7 @@ OniGames is proudly built on **OneChain** (Testnet).
 1. **Clone the repository:**
 
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/psr-codes/oni-games
    cd oni-games/frontend
    ```
 
