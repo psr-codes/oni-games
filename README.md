@@ -11,7 +11,7 @@
 - 💻 **GitHub (Contracts & UI Code):** [psr-codes/oni-games](https://github.com/psr-codes/oni-games)
 - 📜 **Smart Contracts (Arcade & Casino):** [View on OneScan](https://onescan.cc/testnet/packageDetail?packageId=0x9648be59effa27966ee8cc0a531cdefac977bb6444dcf5df96c37304eefa46b3) _(Both modules deployed under this single Package ID)_
 - 📄 **Project Whitepaper:** [Read Whitepaper](https://docs.google.com/document/d/1Kd4wXG72WtT0QA0aFTY_CHZRu7TiCgqn/edit?usp=share_link&ouid=116479139271503954993&rtpof=true&sd=true)
-- 📊 **Pitch Deck (PPT):** [View Presentation](https://docs.google.com/document/d/1Kd4wXG72WtT0QA0aFTY_CHZRu7TiCgqn/edit?usp=share_link&ouid=116479139271503954993&rtpof=true&sd=true)
+- 📊 **Pitch Deck (PPT):** [View Presentation](https://drive.google.com/file/d/1rY0EFVucBVwmMCjLPP0wMQIoOuhti9Ps/view?usp=sharing)
 
 ---
 
