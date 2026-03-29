@@ -104,7 +104,6 @@ export default function TowerBloxx({ onGameOver, onScoreChange }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
-  const [scale, setScale] = useState(1);
 
   // Game state refs (using refs for animation loop access)
   const stateRef = useRef<GameState>("menu");
@@ -149,19 +148,6 @@ export default function TowerBloxx({ onGameOver, onScoreChange }: GameProps) {
   const INFO_ICON_X = CW - 40;
   const INFO_ICON_Y = 12;
   const INFO_ICON_R = 14;
-
-  // ─── Responsive scaling ──────────────────────────────────────────────────
-  const updateScale = useCallback(() => {
-    const sx = window.innerWidth / CW;
-    const sy = (window.innerHeight - 120) / CH;
-    setScale(Math.min(sx, sy, 1.0) * 0.88);
-  }, []);
-
-  useEffect(() => {
-    updateScale();
-    window.addEventListener("resize", updateScale);
-    return () => window.removeEventListener("resize", updateScale);
-  }, [updateScale]);
 
   // ─── Init stars ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -1077,10 +1063,10 @@ export default function TowerBloxx({ onGameOver, onScoreChange }: GameProps) {
       ref={containerRef}
       style={{
         display: "flex",
-        flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
         width: "100%",
+        height: "100%",
         overflow: "hidden",
         touchAction: "none",
         userSelect: "none",
@@ -1092,7 +1078,6 @@ export default function TowerBloxx({ onGameOver, onScoreChange }: GameProps) {
         width={CW}
         height={CH}
         onClick={(e) => {
-          // Check if info icon was clicked
           const rect = canvasRef.current!.getBoundingClientRect();
           const cx = (e.clientX - rect.left) * (CW / rect.width);
           const cy = (e.clientY - rect.top) * (CH / rect.height);
@@ -1106,7 +1091,6 @@ export default function TowerBloxx({ onGameOver, onScoreChange }: GameProps) {
             forceUpdate((n) => n + 1);
             return;
           }
-          // If paused, resume on tap
           if (pausedRef.current) {
             pausedRef.current = false;
             forceUpdate((n) => n + 1);
@@ -1116,7 +1100,6 @@ export default function TowerBloxx({ onGameOver, onScoreChange }: GameProps) {
         }}
         onTouchStart={(e) => {
           e.preventDefault();
-          // Check if info icon was tapped
           const rect = canvasRef.current!.getBoundingClientRect();
           const cx = (e.touches[0].clientX - rect.left) * (CW / rect.width);
           const cy = (e.touches[0].clientY - rect.top) * (CH / rect.height);
@@ -1138,38 +1121,15 @@ export default function TowerBloxx({ onGameOver, onScoreChange }: GameProps) {
           handleDrop();
         }}
         style={{
-          transform: `scale(${scale})`,
-          transformOrigin: "center center",
+          maxWidth: "100%",
+          maxHeight: "100%",
+          aspectRatio: `${CW} / ${CH}`,
           borderRadius: "8px",
           boxShadow: "0 0 40px rgba(100,60,180,0.3)",
           cursor: "pointer",
+          display: "block",
         }}
       />
-      {(stateRef.current === "playing" || stateRef.current === "gameover") && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            resetGame();
-          }}
-          style={{
-            position: "absolute",
-            bottom: `calc(50% - ${(CH * scale) / 2 + 30}px)`,
-            right: `calc(50% - ${(CW * scale) / 2 - 10}px)`,
-            padding: "8px 16px",
-            background: "rgba(255,255,255,0.15)",
-            border: "1px solid rgba(255,255,255,0.3)",
-            borderRadius: "6px",
-            color: "#fff",
-            fontFamily: "monospace",
-            fontSize: "13px",
-            cursor: "pointer",
-            backdropFilter: "blur(4px)",
-            zIndex: 10,
-          }}
-        >
-          ↻ Restart
-        </button>
-      )}
     </div>
   );
 }

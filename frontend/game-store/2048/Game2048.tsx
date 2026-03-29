@@ -165,20 +165,6 @@ export default function Game2048({ onGameOver, onScoreChange }: GameProps) {
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
   const [status, setStatus] = useState<"playing" | "won" | "lost">("playing");
-  const [scale, setScale] = useState(1);
-
-  // Responsive scaling
-  useEffect(() => {
-    const updateScale = () => {
-      const vw = window.innerWidth - 32;
-      const vh = window.innerHeight - 200;
-      const s = Math.min(vw / BOARD_SIZE, vh / (BOARD_SIZE + 60));
-      setScale(Math.max(s, 0.4));
-    };
-    updateScale();
-    window.addEventListener("resize", updateScale);
-    return () => window.removeEventListener("resize", updateScale);
-  }, []);
 
   // Load best score
   useEffect(() => {
@@ -422,37 +408,45 @@ export default function Game2048({ onGameOver, onScoreChange }: GameProps) {
       ref={containerRef}
       style={{
         display: "flex",
-        flexDirection: "column",
         alignItems: "center",
-        gap: "12px",
+        justifyContent: "center",
         fontFamily: "monospace",
         color: "#fff",
         width: "100%",
+        height: "100%",
+        position: "relative",
       }}
     >
       <div
         style={{
           position: "relative",
-          width: BOARD_SIZE,
-          height: BOARD_SIZE + 60,
-          transform: `scale(${scale})`,
-          transformOrigin: "top center",
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "8px",
         }}
       >
         <canvas
           ref={canvasRef}
           width={BOARD_SIZE}
           height={BOARD_SIZE + 60}
-          style={{ display: "block", background: BG, borderRadius: "12px" }}
+          style={{
+            display: "block",
+            background: BG,
+            borderRadius: "12px",
+            maxWidth: "100%",
+            maxHeight: "90%",
+            aspectRatio: `${BOARD_SIZE} / ${BOARD_SIZE + 60}`,
+          }}
         />
 
         {status !== "playing" && (
           <div
             style={{
               position: "absolute",
-              bottom: "60px",
-              left: "50%",
-              transform: "translateX(-50%)",
               zIndex: 10,
             }}
           >
@@ -461,21 +455,19 @@ export default function Game2048({ onGameOver, onScoreChange }: GameProps) {
             </button>
           </div>
         )}
-      </div>
 
-      {status === "playing" && (
-        <div
-          style={{
-            fontSize: "13px",
-            color: "#666",
-            textAlign: "center",
-            transform: `scale(${scale})`,
-            transformOrigin: "top center",
-          }}
-        >
-          ← → ↑ ↓ or WASD to move · Swipe on mobile
-        </div>
-      )}
+        {status === "playing" && (
+          <div
+            style={{
+              fontSize: "13px",
+              color: "#666",
+              textAlign: "center",
+            }}
+          >
+            ← → ↑ ↓ or WASD to move · Swipe on mobile
+          </div>
+        )}
+      </div>
     </div>
   );
 }

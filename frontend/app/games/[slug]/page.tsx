@@ -392,6 +392,7 @@ export default function GamePage() {
           inset: isFullscreen ? 0 : "auto",
           zIndex: isFullscreen ? 99999 : 1,
           flex: isFullscreen ? undefined : 1,
+          minHeight: isFullscreen ? undefined : "calc(100vh - 60px)",
           background: "#0a001a",
           overflow: "hidden",
           display: "flex",
@@ -400,14 +401,16 @@ export default function GamePage() {
           transition: "all 0.35s cubic-bezier(0.4,0,0.2,1)",
         }}
       >
-        {/* Game component — no width/height constraints, fills the container */}
+        {/* Game component — centered within the game area */}
         <div
           style={{
-            flex: 1,
             display: "flex",
-            position: "relative",
+            alignItems: "center",
+            justifyContent: "center",
             width: "100%",
             height: "100%",
+            position: "absolute",
+            inset: 0,
           }}
         >
           {GameComponent && (

@@ -158,20 +158,6 @@ export default function SpaceInvadersGame({
   const [gameState, setGameState] = useState<GameState>("start");
   const [finalScore, setFinalScore] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
-  const [scale, setScale] = useState(1);
-
-  // Responsive scaling — fill viewport width
-  useEffect(() => {
-    const updateScale = () => {
-      const vw = window.innerWidth - 32; // 16px padding each side
-      const vh = window.innerHeight - 140; // navbar + score bar
-      const s = Math.min(vw / GAME_W, vh / GAME_H);
-      setScale(Math.max(s, 0.5)); // floor at 0.5x for very small screens
-    };
-    updateScale();
-    window.addEventListener("resize", updateScale);
-    return () => window.removeEventListener("resize", updateScale);
-  }, []);
 
   const stateRef = useRef({
     player: { x: GAME_W / 2 - PLAYER_W / 2, y: PLAYER_Y_DEFAULT },
@@ -1118,21 +1104,23 @@ export default function SpaceInvadersGame({
       ref={containerRef}
       style={{
         display: "flex",
-        flexDirection: "column",
         alignItems: "center",
-        gap: "12px",
+        justifyContent: "center",
         fontFamily: "monospace",
         color: "#fff",
         width: "100%",
+        height: "100%",
+        position: "relative",
       }}
     >
       <div
         style={{
           position: "relative",
-          width: GAME_W,
-          height: GAME_H,
-          transform: `scale(${scale})`,
-          transformOrigin: "top center",
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
         <canvas
@@ -1144,6 +1132,9 @@ export default function SpaceInvadersGame({
             background: BG_COLOR,
             borderRadius: "8px",
             border: "1px solid #222",
+            maxWidth: "100%",
+            maxHeight: "100%",
+            aspectRatio: `${GAME_W} / ${GAME_H}`,
           }}
         />
 

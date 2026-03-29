@@ -60,20 +60,6 @@ export default function BubblePopGame({
   );
   const [displayScore, setDisplayScore] = useState(0);
   const [displayFails, setDisplayFails] = useState(0);
-  const [scale, setScale] = useState(1);
-
-  // Responsive scaling
-  useEffect(() => {
-    const updateScale = () => {
-      const vw = window.innerWidth - 32;
-      const vh = window.innerHeight - 200;
-      const s = Math.min(vw / GAME_W, vh / GAME_H);
-      setScale(Math.max(s, 0.4));
-    };
-    updateScale();
-    window.addEventListener("resize", updateScale);
-    return () => window.removeEventListener("resize", updateScale);
-  }, []);
 
   const g = useRef({
     bubbles: [] as Bubble[],
@@ -417,21 +403,23 @@ export default function BubblePopGame({
     <div
       style={{
         display: "flex",
-        flexDirection: "column",
         alignItems: "center",
-        gap: "12px",
+        justifyContent: "center",
         fontFamily: "monospace",
         color: "#fff",
         width: "100%",
+        height: "100%",
+        position: "relative",
       }}
     >
       <div
         style={{
           position: "relative",
-          width: GAME_W,
-          height: GAME_H,
-          transform: `scale(${scale})`,
-          transformOrigin: "top center",
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
         <canvas
@@ -444,6 +432,9 @@ export default function BubblePopGame({
             borderRadius: "8px",
             border: "1px solid #222",
             cursor: "pointer",
+            maxWidth: "100%",
+            maxHeight: "100%",
+            aspectRatio: `${GAME_W} / ${GAME_H}`,
           }}
         />
 

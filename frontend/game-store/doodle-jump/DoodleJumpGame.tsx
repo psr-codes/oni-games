@@ -162,7 +162,6 @@ export default function DoodleJumpGame({
   const keysRef = useRef<Set<string>>(new Set());
   const rafRef = useRef<number>(0);
   const touchRef = useRef<number | null>(null);
-  const [scale, setScale] = useState(1);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(() => {
     if (typeof window === "undefined") return 0;
@@ -173,18 +172,6 @@ export default function DoodleJumpGame({
   const [started, setStarted] = useState(false);
   const [starsCollected, setStarsCollected] = useState(0);
   const [lives, setLives] = useState(0);
-
-  // Responsive scaling
-  useEffect(() => {
-    const resize = () => {
-      const sx = window.innerWidth / CW;
-      const sy = window.innerHeight / CH;
-      setScale(Math.min(sx, sy, 1.0) * 1);
-    };
-    resize();
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
-  }, []);
 
   const spawnParticles = (
     x: number,
@@ -747,21 +734,23 @@ export default function DoodleJumpGame({
 
   const containerStyle: React.CSSProperties = {
     display: "flex",
-    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
+    height: "100%",
     position: "relative",
     overflow: "hidden",
     fontFamily: "'Courier New', monospace",
   };
 
   const canvasStyle: React.CSSProperties = {
-    transform: `scale(${scale})`,
-    transformOrigin: "center center",
+    maxWidth: "100%",
+    maxHeight: "100%",
+    aspectRatio: `${CW} / ${CH}`,
     borderRadius: 12,
     border: "2px solid #334155",
     boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
+    display: "block",
   };
 
   const overlayStyle: React.CSSProperties = {

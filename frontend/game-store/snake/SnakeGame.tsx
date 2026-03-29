@@ -6,8 +6,7 @@ import type { GameProps } from "../registry";
 // ============= CONSTANTS =============
 const GRID_SIZE = 25;
 const INITIAL_SPEED = 120;
-const GAME_W = 500;
-const GAME_H = 500;
+const DEFAULT_GAME_SIZE = 500;
 
 type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT";
 type Position = { x: number; y: number };
@@ -90,25 +89,38 @@ function randomPowerUpType(): PowerUpType {
 export default function SnakeGame({ onGameOver, onScoreChange }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const gameSizeRef = useRef(DEFAULT_GAME_SIZE);
 
   const [gameState, setGameState] = useState<GameState>("idle");
   const [displayScore, setDisplayScore] = useState(0);
   const [displayLevel, setDisplayLevel] = useState(1);
   const [displayCombo, setDisplayCombo] = useState(0);
-  const [scale, setScale] = useState(1);
 
-  // Responsive scaling
-  useEffect(() => {
-    const updateScale = () => {
-      const vw = window.innerWidth - 32;
-      const vh = window.innerHeight - 200;
-      const s = Math.min(vw / GAME_W, vh / GAME_H);
-      setScale(Math.max(s, 0.5));
-    };
-    updateScale();
-    window.addEventListener("resize", updateScale);
-    return () => window.removeEventListener("resize", updateScale);
+  // Resize canvas to fill container (square, limited by smallest dimension)
+  const resizeCanvas = useCallback(() => {
+    const container = containerRef.current;
+    const canvas = canvasRef.current;
+    if (!container || !canvas) return;
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    // Use the smaller dimension to keep the game square
+    const size = Math.min(w, h);
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(size * dpr);
+    canvas.height = Math.round(size * dpr);
+    gameSizeRef.current = canvas.width;
   }, []);
+
+  useEffect(() => {
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+    const ro = new ResizeObserver(() => resizeCanvas());
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => {
+      window.removeEventListener("resize", resizeCanvas);
+      ro.disconnect();
+    };
+  }, [resizeCanvas]);
 
   // Game state ref
   const s = useRef({
@@ -141,7 +153,8 @@ export default function SnakeGame({ onGameOver, onScoreChange }: GameProps) {
   };
 
   const spawnParticles = (x: number, y: number, color: string, count = 8) => {
-    const cellSize = GAME_W / GRID_SIZE;
+    const GAME_S = gameSizeRef.current;
+    const cellSize = GAME_S / GRID_SIZE;
     for (let i = 0; i < count; i++) {
       s.current.particles.push({
         x: x * cellSize + cellSize / 2,
@@ -388,11 +401,12 @@ export default function SnakeGame({ onGameOver, onScoreChange }: GameProps) {
       }
       const ctx = canvas.getContext("2d")!;
       const g = s.current;
-      const cellSize = GAME_W / GRID_SIZE;
+      const GAME_S = gameSizeRef.current;
+      const cellSize = GAME_S / GRID_SIZE;
 
       // Background
       ctx.fillStyle = BG_COLOR;
-      ctx.fillRect(0, 0, GAME_W, GAME_H);
+      ctx.fillRect(0, 0, GAME_S, GAME_S);
 
       // Grid
       ctx.strokeStyle = "rgba(0, 255, 136, 0.04)";
@@ -400,11 +414,11 @@ export default function SnakeGame({ onGameOver, onScoreChange }: GameProps) {
       for (let i = 0; i <= GRID_SIZE; i++) {
         ctx.beginPath();
         ctx.moveTo(i * cellSize, 0);
-        ctx.lineTo(i * cellSize, GAME_H);
+        ctx.lineTo(i * cellSize, GAME_S);
         ctx.stroke();
         ctx.beginPath();
         ctx.moveTo(0, i * cellSize);
-        ctx.lineTo(GAME_W, i * cellSize);
+        ctx.lineTo(GAME_S, i * cellSize);
         ctx.stroke();
       }
 
@@ -539,32 +553,33 @@ export default function SnakeGame({ onGameOver, onScoreChange }: GameProps) {
       ctx.globalAlpha = 1;
 
       // HUD
+      const hudScale = GAME_S / DEFAULT_GAME_SIZE;
       ctx.fillStyle = "rgba(0,0,0,0.5)";
-      ctx.fillRect(0, 0, GAME_W, 34);
+      ctx.fillRect(0, 0, GAME_S, 34 * hudScale);
       ctx.fillStyle = "#fff";
-      ctx.font = "bold 15px monospace";
-      ctx.fillText(`SCORE: ${g.score}`, 12, 23);
+      ctx.font = `bold ${Math.round(15 * hudScale)}px monospace`;
+      ctx.fillText(`SCORE: ${g.score}`, 12 * hudScale, 23 * hudScale);
       ctx.textAlign = "center";
-      ctx.fillText(`LEVEL ${g.level}`, GAME_W / 2, 23);
+      ctx.fillText(`LEVEL ${g.level}`, GAME_S / 2, 23 * hudScale);
       ctx.textAlign = "right";
       if (g.combo > 1) {
         ctx.fillStyle = "#ffaa00";
-        ctx.fillText(`x${g.combo} COMBO`, GAME_W - 12, 23);
+        ctx.fillText(`x${g.combo} COMBO`, GAME_S - 12 * hudScale, 23 * hudScale);
       }
       ctx.textAlign = "left";
 
       // Active effects bar
       const liveEffects = g.activeEffects.filter((e) => e.endsAt > Date.now());
       if (liveEffects.length > 0) {
-        let ex = 12;
+        let ex = 12 * hudScale;
         liveEffects.forEach((e) => {
           const remaining = Math.ceil((e.endsAt - Date.now()) / 1000);
           const color = POWER_UP_COLORS[e.type];
           ctx.fillStyle = color;
-          ctx.font = "bold 10px monospace";
+          ctx.font = `bold ${Math.round(10 * hudScale)}px monospace`;
           const label = `${POWER_UP_LABELS[e.type]} ${remaining}s`;
-          ctx.fillText(label, ex, GAME_H - 10);
-          ex += ctx.measureText(label).width + 12;
+          ctx.fillText(label, ex, GAME_S - 10 * hudScale);
+          ex += ctx.measureText(label).width + 12 * hudScale;
         });
       }
 
@@ -582,11 +597,12 @@ export default function SnakeGame({ onGameOver, onScoreChange }: GameProps) {
     if (!canvas) return;
     const ctx = canvas.getContext("2d")!;
     const g = s.current;
-    const cellSize = GAME_W / GRID_SIZE;
+    const GAME_S = gameSizeRef.current;
+    const cellSize = GAME_S / GRID_SIZE;
 
     // Draw the last frame background
     ctx.fillStyle = BG_COLOR;
-    ctx.fillRect(0, 0, GAME_W, GAME_H);
+    ctx.fillRect(0, 0, GAME_S, GAME_S);
 
     // Grid
     ctx.strokeStyle = "rgba(0, 255, 136, 0.04)";
@@ -594,11 +610,11 @@ export default function SnakeGame({ onGameOver, onScoreChange }: GameProps) {
     for (let i = 0; i <= GRID_SIZE; i++) {
       ctx.beginPath();
       ctx.moveTo(i * cellSize, 0);
-      ctx.lineTo(i * cellSize, GAME_H);
+      ctx.lineTo(i * cellSize, GAME_S);
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(0, i * cellSize);
-      ctx.lineTo(GAME_W, i * cellSize);
+      ctx.lineTo(GAME_S, i * cellSize);
       ctx.stroke();
     }
 
@@ -677,32 +693,35 @@ export default function SnakeGame({ onGameOver, onScoreChange }: GameProps) {
       ref={containerRef}
       style={{
         display: "flex",
-        flexDirection: "column",
         alignItems: "center",
-        gap: "12px",
+        justifyContent: "center",
         fontFamily: "monospace",
         color: "#fff",
         width: "100%",
+        height: "100%",
+        position: "relative",
       }}
     >
       <div
         style={{
           position: "relative",
-          width: GAME_W,
-          height: GAME_H,
-          transform: `scale(${scale})`,
-          transformOrigin: "top center",
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
         <canvas
           ref={canvasRef}
-          width={GAME_W}
-          height={GAME_H}
           style={{
             display: "block",
             background: BG_COLOR,
             borderRadius: "8px",
             border: "1px solid #222",
+            maxWidth: "100%",
+            maxHeight: "100%",
+            aspectRatio: "1 / 1",
           }}
         />
 
