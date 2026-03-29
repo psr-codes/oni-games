@@ -7,9 +7,9 @@ interface GameProps {
   onScoreChange?: (score: number) => void;
 }
 
-// ─── Canvas Constants ────────────────────────────────────────────────────────
-const CW = 800;
-const CH = 500;
+// ─── Canvas defaults (used until container is measured) ─────────────────────
+const DEFAULT_CW = 800;
+const DEFAULT_CH = 500;
 
 // ─── Geometry Classes ────────────────────────────────────────────────────────
 
@@ -778,8 +778,10 @@ const DEATH_SFX_URL =
 export default function PolyDashGame({ onGameOver, onScoreChange }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const cwRef = useRef(DEFAULT_CW);
+  const chRef = useRef(DEFAULT_CH);
+  const unityRef = useRef(DEFAULT_CW / 40);
   const rafRef = useRef<number>(0);
-  const [scale, setScale] = useState(1);
 
   const heroRef = useRef<Hero | null>(null);
   const gridRef = useRef<Grid>(new Grid());
@@ -800,6 +802,7 @@ export default function PolyDashGame({ onGameOver, onScoreChange }: GameProps) {
   const checkpointCountRef = useRef(0);
   const checkpointPosRef = useRef<{ x: number; y: number } | null>(null);
   const lastCheckpointTimeRef = useRef(0);
+  const deathCountRef = useRef(0);
 
   // Assets
   const cityImgRef = useRef<HTMLImageElement | null>(null);
@@ -812,7 +815,7 @@ export default function PolyDashGame({ onGameOver, onScoreChange }: GameProps) {
   const VX = 10;
   const XJUMP = 4;
   const YJUMP = 3;
-  const UNITY = CW / 40;
+  // UNITY is derived from canvas width, kept in unityRef and updated each frame
 
   // ─── Load assets ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -848,31 +851,33 @@ export default function PolyDashGame({ onGameOver, onScoreChange }: GameProps) {
     };
   }, []);
 
-  // ─── Scaling (fill all available space) ────────────────────────────────
-  const updateScale = useCallback(() => {
+  // ─── Resize canvas to fill container ───────────────────────────────────
+  const resizeCanvas = useCallback(() => {
     const container = containerRef.current;
-    if (container) {
-      const sx = container.clientWidth / CW;
-      const sy = container.clientHeight / CH;
-      setScale(Math.min(sx, sy) * 0.99);
-    } else {
-      const sx = window.innerWidth / CW;
-      const sy = window.innerHeight / CH;
-      setScale(Math.min(sx, sy) * 0.99);
-    }
+    const canvas = canvasRef.current;
+    if (!container || !canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    // Set the canvas backing-store size to match the container
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    // Update refs so the game loop picks them up
+    cwRef.current = canvas.width;
+    chRef.current = canvas.height;
+    unityRef.current = canvas.width / 40;
   }, []);
 
   useEffect(() => {
-    updateScale();
-    window.addEventListener("resize", updateScale);
-    // Also observe container size changes
-    const ro = new ResizeObserver(() => updateScale());
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+    const ro = new ResizeObserver(() => resizeCanvas());
     if (containerRef.current) ro.observe(containerRef.current);
     return () => {
-      window.removeEventListener("resize", updateScale);
+      window.removeEventListener("resize", resizeCanvas);
       ro.disconnect();
     };
-  }, [updateScale]);
+  }, [resizeCanvas]);
 
   // ─── Create hero / grid ────────────────────────────────────────────────
   const createHero = useCallback(() => {
@@ -1003,14 +1008,14 @@ export default function PolyDashGame({ onGameOver, onScoreChange }: GameProps) {
     };
   }, [resetGame, saveCheckpoint, respawnAtCheckpoint]);
 
-  // ─── Drawing helpers ───────────────────────────────────────────────────
+  // ─── Drawing helpers (read live values from refs each call) ────────────
   const gx = useCallback(
-    (x: number) => (x - cameraXRef.current) * UNITY,
-    [UNITY],
+    (x: number) => (x - cameraXRef.current) * unityRef.current,
+    [],
   );
   const gy = useCallback(
-    (y: number) => CH - (y + cameraYRef.current) * UNITY,
-    [UNITY],
+    (y: number) => chRef.current - (y + cameraYRef.current) * unityRef.current,
+    [],
   );
 
   // ─── Game loop ─────────────────────────────────────────────────────────
@@ -1033,6 +1038,11 @@ export default function PolyDashGame({ onGameOver, onScoreChange }: GameProps) {
       const hero = heroRef.current!;
       const grid = gridRef.current;
       const state = stateRef.current;
+
+      // Read current canvas dimensions each frame
+      const CW = cwRef.current;
+      const CH = chRef.current;
+      const UNITY = unityRef.current;
 
       // ─── Delta time ─────────────────────────────────────────
       let dt = (now - lastTimeRef.current) / 1000;
@@ -1087,7 +1097,11 @@ export default function PolyDashGame({ onGameOver, onScoreChange }: GameProps) {
           }
           // Pause music briefly
           bgMusicRef.current?.pause();
-          onGameOver(scoreRef.current);
+          deathCountRef.current++;
+          // Only show the mint popup every 5 deaths
+          if (deathCountRef.current % 5 === 0) {
+            onGameOver(scoreRef.current);
+          }
         }
         if (hero.haveFinished) {
           stateRef.current = "win";
@@ -1146,15 +1160,15 @@ export default function PolyDashGame({ onGameOver, onScoreChange }: GameProps) {
         const cityW = CW * 2;
         const scrollX = bgScrollRef.current % cityW;
         ctx.save();
-        ctx.globalAlpha = 0.3;
+        ctx.globalAlpha = 0.5;
         for (
           let bx = -scrollX;
           bx < CW + 200;
           bx += 60 + Math.sin(bx * 0.01) * 20
         ) {
           const bh =
-            80 + Math.sin(bx * 0.03 + 1) * 50 + Math.cos(bx * 0.017) * 30;
-          const bw = 25 + Math.sin(bx * 0.05) * 10;
+            200 + Math.sin(bx * 0.03 + 1) * 120 + Math.cos(bx * 0.017) * 80;
+          const bw = 35 + Math.sin(bx * 0.05) * 15;
           ctx.fillStyle = `hsl(${260 + Math.sin(bx * 0.01) * 20}, 60%, 15%)`;
           ctx.fillRect(bx, CH - bh, bw, bh);
           ctx.fillStyle = `rgba(${180 + Math.sin(bx) * 50}, 100, 255, 0.4)`;
@@ -1450,7 +1464,7 @@ export default function PolyDashGame({ onGameOver, onScoreChange }: GameProps) {
 
     rafRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [createHero, onGameOver, onScoreChange, gx, gy, UNITY]);
+  }, [createHero, onGameOver, onScoreChange, gx, gy]);
 
   const handleTap = useCallback(() => {
     if (stateRef.current === "menu") {
@@ -1503,8 +1517,6 @@ export default function PolyDashGame({ onGameOver, onScoreChange }: GameProps) {
     >
       <canvas
         ref={canvasRef}
-        width={CW}
-        height={CH}
         onClick={handleTap}
         onTouchStart={(e) => {
           e.preventDefault();
@@ -1515,10 +1527,9 @@ export default function PolyDashGame({ onGameOver, onScoreChange }: GameProps) {
           }, 100);
         }}
         style={{
-          transform: `scale(${scale})`,
-          transformOrigin: "center center",
-          borderRadius: "6px",
-          boxShadow: "0 0 40px rgba(254,1,154,0.3)",
+          width: "100%",
+          height: "100%",
+          display: "block",
           cursor: "pointer",
         }}
       />

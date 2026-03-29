@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { GAMES } from "@/game-store/registry";
 import dynamic from "next/dynamic";
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   useCurrentAccount,
@@ -36,6 +36,56 @@ export default function GamePage() {
   const [mintStatus, setMintStatus] = useState<MintStatus>("idle");
   const [mintResult, setMintResult] = useState<MintResult | null>(null);
   const [mintError, setMintError] = useState("");
+
+  // ── Cinematic fullscreen state ──
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [vignetteActive, setVignetteActive] = useState(false);
+  const [exitVisible, setExitVisible] = useState(true);
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const enterCinematic = useCallback(() => {
+    setVignetteActive(true);
+    setTimeout(() => {
+      setIsFullscreen(true);
+      setExitVisible(true);
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+      exitTimerRef.current = setTimeout(() => setExitVisible(false), 3000);
+    }, 80);
+    setTimeout(() => setVignetteActive(false), 600);
+  }, []);
+
+  const exitCinematic = useCallback(() => {
+    setVignetteActive(true);
+    setTimeout(() => setIsFullscreen(false), 80);
+    setTimeout(() => setVignetteActive(false), 500);
+  }, []);
+
+  // Keyboard shortcuts: F to toggle, ESC to exit
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isFullscreen) exitCinematic();
+      if ((e.key === "f" || e.key === "F") && !e.ctrlKey && !e.metaKey) {
+        // Don't steal F key when typing in inputs
+        const tag = (e.target as HTMLElement)?.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA") return;
+        if (isFullscreen) exitCinematic();
+        else enterCinematic();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+    };
+  }, [isFullscreen, enterCinematic, exitCinematic]);
+
+  // Show exit button on mouse move in fullscreen
+  const handleMouseMove = useCallback(() => {
+    if (!isFullscreen) return;
+    setExitVisible(true);
+    if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+    exitTimerRef.current = setTimeout(() => setExitVisible(false), 2200);
+  }, [isFullscreen]);
 
   // Dynamically load the game component (code-split)
   const GameComponent = useMemo(() => {
@@ -183,58 +233,302 @@ export default function GamePage() {
   }
 
   return (
-    <div className="h-screen bg-[#111a2e] flex flex-col overflow-hidden">
-      {/* Header bar */}
-      <div className="border-b border-slate-700/20 bg-[#1a2540]/60 backdrop-blur-sm shrink-0">
-        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+    <div
+      onMouseMove={handleMouseMove}
+      style={{
+        fontFamily: "inherit",
+        background: "#111a2e",
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      {/* ── Header bar — hidden in fullscreen ── */}
+      {!isFullscreen && (
+        <div
+          style={{
+            borderBottom: "1px solid rgba(255,255,255,0.07)",
+            background: "rgba(26,37,64,0.95)",
+            backdropFilter: "blur(12px)",
+            padding: "10px 24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexShrink: 0,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <Link
               href="/games"
-              className="text-slate-500 hover:text-slate-200 transition-colors text-sm"
+              style={{
+                color: "rgba(255,255,255,0.35)",
+                fontSize: 13,
+                textDecoration: "none",
+                transition: "color 0.2s",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.color = "rgba(255,255,255,0.7)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color = "rgba(255,255,255,0.35)")
+              }
             >
               ← Games
             </Link>
-            <div className="w-px h-5 bg-slate-700/30" />
-            <div className="flex items-center gap-2">
+            <div
+              style={{
+                width: 1,
+                height: 18,
+                background: "rgba(255,255,255,0.1)",
+              }}
+            />
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {game.image ? (
-                <img src={game.image} alt="" className="w-6 h-6 object-contain" />
+                <img
+                  src={game.image}
+                  alt=""
+                  style={{
+                    width: 24,
+                    height: 24,
+                    objectFit: "contain",
+                    borderRadius: 4,
+                  }}
+                />
               ) : (
-                <span className="text-xl">{game.emoji}</span>
+                <span style={{ fontSize: 20 }}>{game.emoji}</span>
               )}
-              <h1 className="text-base font-bold text-slate-50">{game.name}</h1>
+              <h1
+                style={{
+                  color: "#fff",
+                  fontWeight: 700,
+                  fontSize: 15,
+                  margin: 0,
+                }}
+              >
+                {game.name}
+              </h1>
             </div>
           </div>
 
-          {/* Live score display (when not in game-over state) */}
-          {lastScore !== null && !showGameOver && (
-            <div className="text-sm text-slate-400">
-              Score:{" "}
-              <span className="text-cyan-400 font-bold">{lastScore}</span>
-            </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            {/* Live score */}
+            {lastScore !== null && !showGameOver && (
+              <span style={{ color: "#00d4ff", fontSize: 13, fontWeight: 700 }}>
+                Score: <span style={{ color: "#fff" }}>{lastScore}</span>
+              </span>
+            )}
+
+            {/* Full Screen mode button */}
+            <button
+              onClick={enterCinematic}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "7px 16px",
+                background: "transparent",
+                border: "1px solid rgba(0,212,255,0.3)",
+                borderRadius: 10,
+                color: "rgba(0,212,255,0.85)",
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: 1.5,
+                textTransform: "uppercase" as const,
+                cursor: "pointer",
+                transition: "all 0.25s ease",
+                fontFamily: "inherit",
+                boxShadow: "0 0 14px rgba(0,212,255,0.08)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(0,212,255,0.1)";
+                e.currentTarget.style.borderColor = "rgba(0,212,255,0.6)";
+                e.currentTarget.style.boxShadow =
+                  "0 0 24px rgba(0,212,255,0.2)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.borderColor = "rgba(0,212,255,0.3)";
+                e.currentTarget.style.boxShadow =
+                  "0 0 14px rgba(0,212,255,0.08)";
+              }}
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <polyline points="15 3 21 3 21 9" />
+                <polyline points="9 21 3 21 3 15" />
+                <line x1="21" y1="3" x2="14" y2="10" />
+                <line x1="3" y1="21" x2="10" y2="14" />
+              </svg>
+              Full Screen
+              <span
+                style={{
+                  padding: "2px 5px",
+                  background: "rgba(0,212,255,0.1)",
+                  border: "1px solid rgba(0,212,255,0.15)",
+                  borderRadius: 4,
+                  color: "rgba(0,212,255,0.5)",
+                  fontSize: 9,
+                  fontWeight: 700,
+                  letterSpacing: 1,
+                }}
+              >
+                F
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Game Area — fills remaining space, or fills entire screen in fullscreen ── */}
+      <div
+        style={{
+          position: isFullscreen ? "fixed" : "relative",
+          inset: isFullscreen ? 0 : "auto",
+          zIndex: isFullscreen ? 99999 : 1,
+          flex: isFullscreen ? undefined : 1,
+          background: "#0a001a",
+          overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transition: "all 0.35s cubic-bezier(0.4,0,0.2,1)",
+        }}
+      >
+        {/* Game component — no width/height constraints, fills the container */}
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            position: "relative",
+            width: "100%",
+            height: "100%",
+          }}
+        >
+          {GameComponent && (
+            <GameComponent
+              onGameOver={handleGameOver}
+              onScoreChange={handleScoreChange}
+            />
           )}
         </div>
-      </div>
 
-      {/* Game Area */}
-      <div className="flex-1 flex items-center justify-center overflow-hidden relative">
-        {GameComponent && (
-          <GameComponent
-            onGameOver={handleGameOver}
-            onScoreChange={handleScoreChange}
-          />
+        {/* Vignette pulse overlay (transition effect) */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.95) 100%)",
+            opacity: vignetteActive ? 1 : 0,
+            transition: "opacity 0.5s ease",
+            pointerEvents: "none",
+            zIndex: 10,
+          }}
+        />
+
+        {/* ── Ghost exit button — fullscreen only, appears on mouse move ── */}
+        {isFullscreen && (
+          <div
+            onClick={exitCinematic}
+            style={{
+              position: "absolute",
+              top: 20,
+              right: 20,
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "10px 16px",
+              background: "rgba(0,0,0,0.45)",
+              backdropFilter: "blur(24px)",
+              WebkitBackdropFilter: "blur(24px)",
+              border: "1px solid rgba(0,212,255,0.15)",
+              borderRadius: 14,
+              cursor: "pointer",
+              opacity: exitVisible ? 0.9 : 0,
+              transform: exitVisible
+                ? "scale(1) translateY(0)"
+                : "scale(0.92) translateY(-4px)",
+              transition:
+                "opacity 0.6s ease, transform 0.5s ease, border-color 0.3s, box-shadow 0.3s",
+              userSelect: "none",
+              zIndex: 20,
+              boxShadow: exitVisible ? "0 0 24px rgba(0,212,255,0.12)" : "none",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.opacity = "1";
+              e.currentTarget.style.borderColor = "rgba(0,212,255,0.45)";
+              e.currentTarget.style.boxShadow = "0 0 30px rgba(0,212,255,0.25)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.opacity = "0.9";
+              e.currentTarget.style.borderColor = "rgba(0,212,255,0.15)";
+              e.currentTarget.style.boxShadow = "0 0 24px rgba(0,212,255,0.12)";
+            }}
+          >
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="rgba(0,212,255,0.85)"
+              strokeWidth="2.5"
+            >
+              <polyline points="4 14 10 14 10 20" />
+              <polyline points="20 10 14 10 14 4" />
+              <line x1="10" y1="14" x2="3" y2="21" />
+              <line x1="21" y1="3" x2="14" y2="10" />
+            </svg>
+            <span
+              style={{
+                color: "rgba(0,212,255,0.8)",
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: 2,
+                textTransform: "uppercase",
+              }}
+            >
+              Exit Full Screen
+            </span>
+            <span
+              style={{
+                padding: "2px 6px",
+                background: "rgba(0,212,255,0.1)",
+                border: "1px solid rgba(0,212,255,0.15)",
+                borderRadius: 4,
+                color: "rgba(0,212,255,0.5)",
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: 1,
+              }}
+            >
+              ESC
+            </span>
+          </div>
         )}
 
         {/* Game Over Popup Overlay */}
         {showGameOver && lastScore !== null && (
           <div
             className="absolute inset-0 z-40 flex items-center justify-center p-4"
-            style={{ background: "rgba(4, 6, 16, 0.85)", backdropFilter: "blur(12px)" }}
+            style={{
+              background: "rgba(4, 6, 16, 0.85)",
+              backdropFilter: "blur(12px)",
+            }}
             onClick={(e) => e.target === e.currentTarget && handleClosePopup()}
           >
             {/* Modal */}
             <div
               className="relative flex flex-col md:flex-row w-full max-w-[780px] rounded-3xl overflow-hidden"
-              style={{ boxShadow: "0 0 80px rgba(0,200,255,0.12), 0 0 0 1px rgba(255,255,255,0.06)" }}
+              style={{
+                boxShadow:
+                  "0 0 80px rgba(0,200,255,0.12), 0 0 0 1px rgba(255,255,255,0.06)",
+              }}
             >
               {/* Close */}
               <button
@@ -247,7 +541,9 @@ export default function GamePage() {
               {/* ── LEFT: NFT Image ── */}
               <div className="relative w-full md:w-[280px] flex-shrink-0">
                 {/* Glow behind */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${game.color} blur-2xl opacity-40`} />
+                <div
+                  className={`absolute inset-0 bg-gradient-to-br ${game.color} blur-2xl opacity-40`}
+                />
                 {game.image ? (
                   <img
                     src={game.image}
@@ -260,12 +556,16 @@ export default function GamePage() {
                     className={`relative w-full h-full bg-gradient-to-br ${game.color} flex items-center justify-center`}
                     style={{ minHeight: "380px" }}
                   >
-                    <span className="text-8xl drop-shadow-2xl">{game.emoji}</span>
+                    <span className="text-8xl drop-shadow-2xl">
+                      {game.emoji}
+                    </span>
                   </div>
                 )}
                 {/* Score overlay at bottom */}
                 <div className="absolute bottom-0 left-0 right-0 px-5 pb-5 pt-16 bg-gradient-to-t from-black/95 via-black/60 to-transparent">
-                  <p className="text-white/40 text-[10px] tracking-[3px] uppercase mb-0.5">Final Score</p>
+                  <p className="text-white/40 text-[10px] tracking-[3px] uppercase mb-0.5">
+                    Final Score
+                  </p>
                   <p
                     className="text-5xl font-black leading-none"
                     style={{
@@ -290,7 +590,9 @@ export default function GamePage() {
                     </span>
                   </div>
                   <h2 className="text-white text-2xl font-black leading-tight mb-1">
-                    {mintStatus === "success" ? "🏆 Score Minted!" : "Mint Your Score Badge"}
+                    {mintStatus === "success"
+                      ? "🏆 Score Minted!"
+                      : "Mint Your Score Badge"}
                   </h2>
                   <p className="text-white/35 text-[12px] leading-relaxed">
                     {mintStatus === "success"
@@ -306,15 +608,24 @@ export default function GamePage() {
                     { label: "Score", value: lastScore.toLocaleString() },
                     { label: "Network", value: "OneChain" },
                     ...(gameStore && gameStore.mintFee > 0
-                      ? [{ label: "Mint Fee", value: `${(gameStore.mintFee / 1_000_000_000).toFixed(2)} OCT` }]
+                      ? [
+                          {
+                            label: "Mint Fee",
+                            value: `${(gameStore.mintFee / 1_000_000_000).toFixed(2)} OCT`,
+                          },
+                        ]
                       : []),
                   ].map(({ label, value }, i, arr) => (
                     <div
                       key={label}
                       className={`flex items-center justify-between px-4 py-3 ${i < arr.length - 1 ? "border-b border-white/[0.06]" : ""}`}
                     >
-                      <span className="text-white/35 text-[11px] tracking-[2px] uppercase">{label}</span>
-                      <span className="text-white text-[12px] font-bold">{value}</span>
+                      <span className="text-white/35 text-[11px] tracking-[2px] uppercase">
+                        {label}
+                      </span>
+                      <span className="text-white text-[12px] font-bold">
+                        {value}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -324,8 +635,12 @@ export default function GamePage() {
                   <div className="space-y-2">
                     {mintResult.nftId && (
                       <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3">
-                        <div className="text-[10px] text-white/30 uppercase tracking-[2px] mb-1">NFT Object ID</div>
-                        <div className="text-[11px] text-white/70 font-mono break-all">{mintResult.nftId}</div>
+                        <div className="text-[10px] text-white/30 uppercase tracking-[2px] mb-1">
+                          NFT Object ID
+                        </div>
+                        <div className="text-[11px] text-white/70 font-mono break-all">
+                          {mintResult.nftId}
+                        </div>
                       </div>
                     )}
                     <a
@@ -355,16 +670,32 @@ export default function GamePage() {
                         disabled={isTxPending || mintStatus === "minting"}
                         className="w-full relative overflow-hidden rounded-xl py-3.5 text-[12px] font-black tracking-[2px] uppercase transition-all duration-300 disabled:opacity-70"
                         style={{
-                          background: "linear-gradient(135deg, #00d4ff, #00ffaa)",
+                          background:
+                            "linear-gradient(135deg, #00d4ff, #00ffaa)",
                           color: "#000",
                           boxShadow: "0 0 24px rgba(0,212,255,0.3)",
                         }}
                       >
                         {mintStatus === "minting" ? (
                           <span className="flex items-center justify-center gap-2">
-                            <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                            <svg
+                              className="animate-spin w-3.5 h-3.5"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              />
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8v8z"
+                              />
                             </svg>
                             Minting…
                           </span>
